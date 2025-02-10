@@ -15,6 +15,7 @@ project(blend2d-apps C CXX)
 include(FindPkgConfig)
 
 set(BLEND2D_APPS_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "blend2d-apps directory")
+set(unofficial-skia_DIR "/Users/lstampfl/vcpkg/packages/skia_arm64-osx/share/unofficial-skia")
 
 # Dependencies - Blend2D (Requred)
 # ================================
@@ -281,7 +282,9 @@ target_compile_features(bl_bench PUBLIC cxx_std_11)
 set_property(TARGET bl_bench PROPERTY CXX_VISIBILITY_PRESET hidden)
 target_include_directories(bl_bench PRIVATE
   ${DEPENDENCY_AGG_INCLUDE_DIRS}
-  ${DEPENDENCY_CAIRO_INCLUDE_DIRS})
+  ${DEPENDENCY_CAIRO_INCLUDE_DIRS}
+        /Users/lstampfl/vcpkg/packages/skia_arm64-osx/include
+)
 target_compile_definitions(bl_bench PRIVATE
   ${DEPENDENCY_AGG_DEFINITIONS}
   ${DEPENDENCY_CAIRO_DEFINITIONS}
