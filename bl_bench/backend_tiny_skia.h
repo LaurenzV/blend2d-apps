@@ -2,6 +2,7 @@
 #define BLBENCH_BACKEND_TINY_SKIA_H
 
 #include "backend.h"
+#include "tiny_skia.h"
 
 namespace blbench {
 

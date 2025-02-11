@@ -2,6 +2,8 @@
 
 namespace blbench {
     struct TinySkiaModule : public Backend {
+        ts_pixmap* pixmap {};
+
         TinySkiaModule();
         ~TinySkiaModule() override;
 
@@ -32,15 +34,18 @@ namespace blbench {
     }
 
     bool TinySkiaModule::supportsStyle(StyleKind style) const {
-        return true;
+        return style == StyleKind::kSolid;
     }
 
     void TinySkiaModule::beforeRun() {
+        int w = int(_params.screenW);
+        int h = int(_params.screenH);
 
+        pixmap = ts_pixmap_create(w, h);
     }
 
     void TinySkiaModule::afterRun() {
-
+        ts_pixmap_destroy(pixmap);
     }
 
     void TinySkiaModule::flush() {
@@ -48,6 +53,20 @@ namespace blbench {
     }
 
     void TinySkiaModule::renderRectA(RenderOp op) {
+        auto bl_color = _rndColor.nextRgba32();
+        ts_transform t = ts_transform_identity();
+        ts_color color = {(uint8_t) bl_color.r(), (uint8_t) bl_color.g(), (uint8_t) bl_color.b(), (uint8_t) bl_color.a()};
+        BLSizeI bounds(_params.screenW, _params.screenH);
+        StyleKind style = _params.style;
+        int wh = _params.shapeSize;
+
+        if (style == StyleKind::kSolid) {
+            for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
+                auto bs_rect = _rndCoord.nextRectI(bounds, wh, wh);
+                ts_rect rect = {(float) bs_rect.x, (float) bs_rect.y, (float) (bs_rect.x + bs_rect.w), (float) (bs_rect.y + bs_rect.h)};
+                ts_pixmap_fill_rect(pixmap, rect, t, color);
+            }
+        }
     }
     void TinySkiaModule::renderRectF(RenderOp op) {
     }
