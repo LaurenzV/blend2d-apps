@@ -14,6 +14,7 @@
 #include "app.h"
 #include "images_data.h"
 #include "backend_blend2d.h"
+#include "backend_tiny_skia.h"
 
 #if defined(BLEND2D_APPS_ENABLE_AGG)
   #include "backend_agg.h"
@@ -62,6 +63,9 @@ static constexpr uint32_t kSupportedBackends =
 #if defined(BLEND2D_APPS_ENABLE_COREGRAPHICS)
   (1u << uint32_t(BackendKind::kCoreGraphics)) |
 #endif
+#if defined(BLEND2D_APPS_ENABLE_TINY_SKIA)
+  (1u << uint32_t(BackendKind::kTinySkia)) |
+#endif
   (1u << uint32_t(BackendKind::kBlend2D));
 
 static const char* backendKindNameList[] = {
@@ -72,6 +76,7 @@ static const char* backendKindNameList[] = {
   "Skia",
   "JUCE",
   "CoreGraphics"
+  "tiny-skia"
 };
 
 static const char* testKindNameList[] = {
@@ -665,6 +670,14 @@ int BenchApp::run() {
 #if defined(BLEND2D_APPS_ENABLE_AGG)
     if (isBackendEnabled(BackendKind::kAGG)) {
       Backend* backend = createAggBackend();
+      runBackendTests(*backend, params, json);
+      delete backend;
+    }
+#endif
+
+#if defined(BLEND2D_APPS_ENABLE_TINY_SKIA)
+    if (isBackendEnabled(BackendKind::kTinySkia)) {
+      Backend* backend = createTinySkiaBackend();
       runBackendTests(*backend, params, json);
       delete backend;
     }
