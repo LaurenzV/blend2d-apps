@@ -25,6 +25,7 @@ namespace blbench {
         ts_color convert_color(BLRgba32 color);
         ts_rect convert_rect(BLRect rect);
         ts_rect convert_rect_i(BLRectI rect);
+        ts_point convert_point(BLPoint rect);
 
         ts_blend_mode toTinySkiaOperator(uint32_t compOp);
     };
@@ -126,11 +127,42 @@ namespace blbench {
         }
     }
     void TinySkiaModule::renderRoundF(RenderOp op) {
+        // TODO: Placeholder
+        renderRectF(op);
     }
     void TinySkiaModule::renderRoundRotated(RenderOp op) {
+        // TODO: Placeholder
+        renderRectRotated(op);
     }
+
     void TinySkiaModule::renderPolygon(RenderOp op, uint32_t complexity) {
+        BLSizeI bounds(_params.screenW - _params.shapeSize,
+                       _params.screenH - _params.shapeSize);
+        ts_transform t = ts_transform_identity();
+        double wh = double(_params.shapeSize);
+
+        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
+            ts_color color = convert_color(_rndColor.nextRgba32());
+            ts_point base = convert_point(_rndCoord.nextPoint(bounds));
+
+            double x = _rndCoord.nextDouble(base.x, base.x + wh);
+            double y = _rndCoord.nextDouble(base.y, base.y + wh);
+
+            ts_path_builder *builder = ts_path_builder_create();
+            ts_move_to(builder, x, y);
+            for (uint32_t p = 1; p < complexity; p++) {
+                x = _rndCoord.nextDouble(base.x, base.x + wh);
+                y = _rndCoord.nextDouble(base.y, base.y + wh);
+                ts_line_to(builder, x, y);
+            }
+
+            ts_path *path = ts_path_builder_finish(builder);
+            ts_pixmap_fill_path(pixmap, path, t, color, toTinySkiaOperator(_params.compOp));
+
+            ts_path_destroy(path);
+        }
     }
+
     void TinySkiaModule::renderShape(RenderOp op, ShapeData shape) {
     }
 
@@ -140,6 +172,10 @@ namespace blbench {
 
     ts_rect TinySkiaModule::convert_rect(BLRect bl_rect) {
         return {(float) bl_rect.x, (float) bl_rect.y, (float) (bl_rect.x + bl_rect.w), (float) (bl_rect.y + bl_rect.h)};
+    }
+
+    ts_point TinySkiaModule::convert_point(BLPoint point) {
+        return { (float) point.x, (float) point.y };
     }
 
     ts_rect TinySkiaModule::convert_rect_i(BLRectI bl_rect) {

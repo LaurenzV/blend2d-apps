@@ -45,24 +45,24 @@
 namespace blbench {
 
 static constexpr uint32_t kSupportedBackends =
-//#if defined(BLEND2D_APPS_ENABLE_AGG)
-//  (1u << uint32_t(BackendKind::kAGG)) |
-//#endif
-//#if defined(BLEND2D_APPS_ENABLE_CAIRO)
-//  (1u << uint32_t(BackendKind::kCairo)) |
-//#endif
-//#if defined(BLEND2D_APPS_ENABLE_QT)
-//  (1u << uint32_t(BackendKind::kQt)) |
-//#endif
-//#if defined(BLEND2D_APPS_ENABLE_SKIA)
-//  (1u << uint32_t(BackendKind::kSkia)) |
-//#endif
-//#if defined(BLEND2D_APPS_ENABLE_JUCE)
-//  (1u << uint32_t(BackendKind::kJUCE)) |
-//#endif
-//#if defined(BLEND2D_APPS_ENABLE_COREGRAPHICS)
-//  (1u << uint32_t(BackendKind::kCoreGraphics)) |
-//#endif
+#if defined(BLEND2D_APPS_ENABLE_AGG)
+  (1u << uint32_t(BackendKind::kAGG)) |
+#endif
+#if defined(BLEND2D_APPS_ENABLE_CAIRO)
+  (1u << uint32_t(BackendKind::kCairo)) |
+#endif
+#if defined(BLEND2D_APPS_ENABLE_QT)
+  (1u << uint32_t(BackendKind::kQt)) |
+#endif
+#if defined(BLEND2D_APPS_ENABLE_SKIA)
+  (1u << uint32_t(BackendKind::kSkia)) |
+#endif
+#if defined(BLEND2D_APPS_ENABLE_JUCE)
+  (1u << uint32_t(BackendKind::kJUCE)) |
+#endif
+#if defined(BLEND2D_APPS_ENABLE_COREGRAPHICS)
+  (1u << uint32_t(BackendKind::kCoreGraphics)) |
+#endif
 #if defined(BLEND2D_APPS_ENABLE_TINY_SKIA)
   (1u << uint32_t(BackendKind::kTinySkia)) |
 #endif
@@ -787,7 +787,7 @@ int BenchApp::runBackendTests(Backend& backend, BenchParams& params, JSONBuilder
 //      printf(benchHeaderStr, backend._name);
 //      printf(benchBorderStr);
 
-      for (uint32_t testIdx = 0; testIdx < 2; testIdx++) {
+      for (uint32_t testIdx = 0; testIdx < 12; testIdx++) {
         params.testKind = TestKind(testIdx);
 
         if (_saveOverview) {
