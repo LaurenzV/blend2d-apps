@@ -198,6 +198,13 @@ set(DEPENDENCY_AGG_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/3rdparty" "${CMAKE_CU
 set(DEPENDENCY_AGG_DEFINITIONS BLEND2D_APPS_ENABLE_AGG)
 set(DEPENDENCY_AGG_LIBRARIES "")
 
+# tiny-skia
+message("-- [blend2d-apps] adding support for tiny-skia")
+set(DEPENDENCY_TINY_SKIA_LIBRARIES tiny_skia_c)
+set(DEPENDENCY_TINY_SKIA_DEFINITIONS BLEND2D_APPS_ENABLE_TINY_SKIA)
+set(DEPENDENCY_TINY_SKIA_INCLUDE_DIRS "/Users/lstampfl/Programming/Playground/tiny_skia_c")
+set(DEPENDENCY_TINY_SKIA_DIR "/Users/lstampfl/Programming/Playground/tiny_skia_c/target/release")
+
 # Dependencies - Cairo (Optional)
 # ===============================
 
@@ -273,6 +280,8 @@ set(BLEND2D_BENCH_SRC
   bl_bench/backend_qt.h
   bl_bench/backend_skia.cpp
   bl_bench/backend_skia.h
+  bl_bench/backend_tiny_skia.h
+  bl_bench/backend_tiny_skia.cpp
   bl_bench/shape_data.cpp
   bl_bench/shape_data.h
 )
@@ -283,13 +292,15 @@ set_property(TARGET bl_bench PROPERTY CXX_VISIBILITY_PRESET hidden)
 target_include_directories(bl_bench PRIVATE
   ${DEPENDENCY_AGG_INCLUDE_DIRS}
   ${DEPENDENCY_CAIRO_INCLUDE_DIRS}
-        /Users/lstampfl/vcpkg/packages/skia_arm64-osx/include
+  /Users/lstampfl/vcpkg/packages/skia_arm64-osx/include
+  ${DEPENDENCY_TINY_SKIA_INCLUDE_DIRS}
 )
 target_compile_definitions(bl_bench PRIVATE
   ${DEPENDENCY_AGG_DEFINITIONS}
   ${DEPENDENCY_CAIRO_DEFINITIONS}
   ${DEPENDENCY_QT_DEFINITIONS}
   ${DEPENDENCY_SKIA_DEFINITIONS}
+  ${DEPENDENCY_TINY_SKIA_DEFINITIONS}
   ${DEPENDENCY_CG_DEFINITIONS}
   ${DEPENDENCY_JUCE_DEFINITIONS})
 target_link_libraries(bl_bench blend2d::blend2d
@@ -298,8 +309,9 @@ target_link_libraries(bl_bench blend2d::blend2d
   ${DEPENDENCY_QT_LIBRARIES}
   ${DEPENDENCY_SKIA_LIBRARIES}
   ${DEPENDENCY_CG_LIBRARIES}
-  ${DEPENDENCY_JUCE_LIBRARIES})
-target_link_directories(bl_bench PRIVATE ${DEPENDENCY_CAIRO_LIBRARY_DIRS})
+  ${DEPENDENCY_JUCE_LIBRARIES}
+)
+target_link_directories(bl_bench PRIVATE ${DEPENDENCY_CAIRO_LIBRARY_DIRS} ${DEPENDENCY_TINY_SKIA_DIR})
 
 # Blend2D-Apps - Blend2D Qt Demos
 # ===============================
