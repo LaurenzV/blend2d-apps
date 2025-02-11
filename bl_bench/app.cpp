@@ -45,24 +45,24 @@
 namespace blbench {
 
 static constexpr uint32_t kSupportedBackends =
-#if defined(BLEND2D_APPS_ENABLE_AGG)
-  (1u << uint32_t(BackendKind::kAGG)) |
-#endif
-#if defined(BLEND2D_APPS_ENABLE_CAIRO)
-  (1u << uint32_t(BackendKind::kCairo)) |
-#endif
-#if defined(BLEND2D_APPS_ENABLE_QT)
-  (1u << uint32_t(BackendKind::kQt)) |
-#endif
-#if defined(BLEND2D_APPS_ENABLE_SKIA)
-  (1u << uint32_t(BackendKind::kSkia)) |
-#endif
-#if defined(BLEND2D_APPS_ENABLE_JUCE)
-  (1u << uint32_t(BackendKind::kJUCE)) |
-#endif
-#if defined(BLEND2D_APPS_ENABLE_COREGRAPHICS)
-  (1u << uint32_t(BackendKind::kCoreGraphics)) |
-#endif
+//#if defined(BLEND2D_APPS_ENABLE_AGG)
+//  (1u << uint32_t(BackendKind::kAGG)) |
+//#endif
+//#if defined(BLEND2D_APPS_ENABLE_CAIRO)
+//  (1u << uint32_t(BackendKind::kCairo)) |
+//#endif
+//#if defined(BLEND2D_APPS_ENABLE_QT)
+//  (1u << uint32_t(BackendKind::kQt)) |
+//#endif
+//#if defined(BLEND2D_APPS_ENABLE_SKIA)
+//  (1u << uint32_t(BackendKind::kSkia)) |
+//#endif
+//#if defined(BLEND2D_APPS_ENABLE_JUCE)
+//  (1u << uint32_t(BackendKind::kJUCE)) |
+//#endif
+//#if defined(BLEND2D_APPS_ENABLE_COREGRAPHICS)
+//  (1u << uint32_t(BackendKind::kCoreGraphics)) |
+//#endif
 #if defined(BLEND2D_APPS_ENABLE_TINY_SKIA)
   (1u << uint32_t(BackendKind::kTinySkia)) |
 #endif
@@ -658,13 +658,13 @@ int BenchApp::run() {
       runBackendTests(*backend, params, json);
       delete backend;
 
-      backend = createBlend2DBackend(2);
-      runBackendTests(*backend, params, json);
-      delete backend;
-
-      backend = createBlend2DBackend(4);
-      runBackendTests(*backend, params, json);
-      delete backend;
+//      backend = createBlend2DBackend(2);
+//      runBackendTests(*backend, params, json);
+//      delete backend;
+//
+//      backend = createBlend2DBackend(4);
+//      runBackendTests(*backend, params, json);
+//      delete backend;
     }
 
 #if defined(BLEND2D_APPS_ENABLE_AGG)
@@ -767,7 +767,7 @@ int BenchApp::runBackendTests(Backend& backend, BenchParams& params, JSONBuilder
     if (!backend.supportsCompOp(params.compOp))
       continue;
 
-    for (uint32_t styleIdx = 0; styleIdx < kStyleKindCount; styleIdx++) {
+    for (uint32_t styleIdx = 0; styleIdx < 1; styleIdx++) {
       StyleKind style = StyleKind(styleIdx);
       if (!isStyleEnabled(style) || !backend.supportsStyle(style))
         continue;
@@ -783,11 +783,11 @@ int BenchApp::runBackendTests(Backend& backend, BenchParams& params, JSONBuilder
 
       memset(cpmsTotal, 0, sizeof(cpmsTotal));
 
-      printf(benchBorderStr);
-      printf(benchHeaderStr, backend._name);
-      printf(benchBorderStr);
+//      printf(benchBorderStr);
+//      printf(benchHeaderStr, backend._name);
+//      printf(benchBorderStr);
 
-      for (uint32_t testIdx = 0; testIdx < kTestKindCount; testIdx++) {
+      for (uint32_t testIdx = 0; testIdx < 2; testIdx++) {
         params.testKind = TestKind(testIdx);
 
         if (_saveOverview) {
@@ -834,16 +834,16 @@ int BenchApp::runBackendTests(Backend& backend, BenchParams& params, JSONBuilder
         for (uint32_t sizeId = 0; sizeId < _sizeCount; sizeId++)
           fmt[sizeId].format(cpms[sizeId]);
 
-        printf(benchDataFmt,
-          testKindNameList[uint32_t(params.testKind)],
-          compOpNameList[uint32_t(params.compOp)],
-          styleString,
-          fmt[0].data,
-          fmt[1].data,
-          fmt[2].data,
-          fmt[3].data,
-          fmt[4].data,
-          fmt[5].data);
+//        printf(benchDataFmt,
+//          testKindNameList[uint32_t(params.testKind)],
+//          compOpNameList[uint32_t(params.compOp)],
+//          styleString,
+//          fmt[0].data,
+//          fmt[1].data,
+//          fmt[2].data,
+//          fmt[3].data,
+//          fmt[4].data,
+//          fmt[5].data);
 
         json.beforeRecord()
             .openObject()
@@ -863,19 +863,19 @@ int BenchApp::runBackendTests(Backend& backend, BenchParams& params, JSONBuilder
       for (uint32_t sizeId = 0; sizeId < _sizeCount; sizeId++)
         fmt[sizeId].format(cpmsTotal[sizeId]);
 
-      printf(benchBorderStr);
-      printf(benchDataFmt,
-        "Total",
-        compOpNameList[uint32_t(params.compOp)],
-        styleString,
-        fmt[0].data,
-        fmt[1].data,
-        fmt[2].data,
-        fmt[3].data,
-        fmt[4].data,
-        fmt[5].data);
-      printf(benchBorderStr);
-      printf("\n");
+//      printf(benchBorderStr);
+//      printf(benchDataFmt,
+//        "Total",
+//        compOpNameList[uint32_t(params.compOp)],
+//        styleString,
+//        fmt[0].data,
+//        fmt[1].data,
+//        fmt[2].data,
+//        fmt[3].data,
+//        fmt[4].data,
+//        fmt[5].data);
+//      printf(benchBorderStr);
+//      printf("\n");
     }
   }
 
