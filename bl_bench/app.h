@@ -63,7 +63,7 @@ struct BenchApp {
   void serializeOptions(JSONBuilder& json, const BenchParams& params) const;
 
   int run();
-  int runBackendTests(Backend& backend, BenchParams& params, JSONBuilder& json);
+  int runBackendTests(Backend& backend, BenchParams& params);
   uint64_t runSingleTest(Backend& backend, BenchParams& params);
 };
 

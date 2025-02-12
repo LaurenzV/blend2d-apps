@@ -614,127 +614,16 @@ int BenchApp::run() {
   params.format = BL_FORMAT_PRGB32;
   params.strokeWidth = 2.0;
 
-  BLString jsonContent;
-  JSONBuilder json(&jsonContent);
-
-  json.openObject();
-
-  serializeSystemInfo(json);
-  serializeParams(json, params);
-  serializeOptions(json, params);
-
-  json.beforeRecord().addKey("runs").openArray();
-
-  if (_isolated) {
-    BLRuntimeSystemInfo si;
-    BLRuntime::querySystemInfo(&si);
-
-    // Only use features that could actually make a difference.
-    static const uint32_t x86Features[] = {
-      BL_RUNTIME_CPU_FEATURE_X86_SSE2,
-      BL_RUNTIME_CPU_FEATURE_X86_SSE3,
-      BL_RUNTIME_CPU_FEATURE_X86_SSSE3,
-      BL_RUNTIME_CPU_FEATURE_X86_SSE4_1,
-      BL_RUNTIME_CPU_FEATURE_X86_SSE4_2,
-      BL_RUNTIME_CPU_FEATURE_X86_AVX,
-      BL_RUNTIME_CPU_FEATURE_X86_AVX2,
-      BL_RUNTIME_CPU_FEATURE_X86_AVX512
-    };
-
-    const uint32_t* features = x86Features;
-    uint32_t featureCount = ARRAY_SIZE(x86Features);
-
-    for (uint32_t i = 0; i < featureCount; i++) {
-      if ((si.cpuFeatures & features[i]) == features[i]) {
-        Backend* backend = createBlend2DBackend(0, features[i]);
-        runBackendTests(*backend, params, json);
-        delete backend;
-      }
-    }
+  if (isBackendEnabled(BackendKind::kBlend2D)) {
+    Backend* backend = backend = createBlend2DBackend(0);
+    runBackendTests(*backend, params);
+    delete backend;
   }
-  else {
-    if (isBackendEnabled(BackendKind::kBlend2D)) {
-      Backend* backend = backend = createBlend2DBackend(0);
-      runBackendTests(*backend, params, json);
-      delete backend;
-
-//      backend = createBlend2DBackend(2);
-//      runBackendTests(*backend, params, json);
-//      delete backend;
-//
-//      backend = createBlend2DBackend(4);
-//      runBackendTests(*backend, params, json);
-//      delete backend;
-    }
-
-#if defined(BLEND2D_APPS_ENABLE_AGG)
-    if (isBackendEnabled(BackendKind::kAGG)) {
-      Backend* backend = createAggBackend();
-      runBackendTests(*backend, params, json);
-      delete backend;
-    }
-#endif
-
-#if defined(BLEND2D_APPS_ENABLE_TINY_SKIA)
-    if (isBackendEnabled(BackendKind::kTinySkia)) {
-      Backend* backend = createTinySkiaBackend();
-      runBackendTests(*backend, params, json);
-      delete backend;
-    }
-#endif
-
-#if defined(BLEND2D_APPS_ENABLE_CAIRO)
-    if (isBackendEnabled(BackendKind::kCairo)) {
-      Backend* backend = createCairoBackend();
-      runBackendTests(*backend, params, json);
-      delete backend;
-    }
-#endif
-
-#if defined(BLEND2D_APPS_ENABLE_QT)
-    if (isBackendEnabled(BackendKind::kQt)) {
-      Backend* backend = createQtBackend();
-      runBackendTests(*backend, params, json);
-      delete backend;
-    }
-#endif
-
-#if defined(BLEND2D_APPS_ENABLE_SKIA)
-    if (isBackendEnabled(BackendKind::kSkia)) {
-      Backend* backend = createSkiaBackend();
-      runBackendTests(*backend, params, json);
-      delete backend;
-    }
-#endif
-
-#if defined(BLEND2D_APPS_ENABLE_JUCE)
-    if (isBackendEnabled(BackendKind::kJUCE)) {
-      Backend* backend = createJuceBackend();
-      runBackendTests(*backend, params, json);
-      delete backend;
-    }
-#endif
-
-#if defined(BLEND2D_APPS_ENABLE_COREGRAPHICS)
-    if (isBackendEnabled(BackendKind::kCoreGraphics)) {
-      Backend* backend = createCGBackend();
-      runBackendTests(*backend, params, json);
-      delete backend;
-    }
-#endif
-  }
-
-  json.closeArray(true);
-  json.closeObject(true);
-  json.nl();
-
-  printf("\n");
-  fputs(jsonContent.data(), stdout);
 
   return 0;
 }
 
-int BenchApp::runBackendTests(Backend& backend, BenchParams& params, JSONBuilder& json) {
+int BenchApp::runBackendTests(Backend& backend, BenchParams& params) {
   char fileName[256];
   char styleString[128];
 
@@ -750,137 +639,52 @@ int BenchApp::runBackendTests(Backend& backend, BenchParams& params, JSONBuilder
   uint64_t cpmsTotal[kBenchShapeSizeCount] {};
   DurationFormat fmt[kBenchShapeSizeCount] {};
 
-  uint32_t compOpFirst = BL_COMP_OP_SRC_OVER;
-  uint32_t compOpLast  = BL_COMP_OP_SRC_COPY;
+  params.compOp = BL_COMP_OP_SRC_OVER;
+  uint32_t styleIdx = 0;
+  params.style = StyleKind(styleIdx);
+  uint32_t testIdx = 0;
+  params.testKind = TestKind(testIdx);
 
-  if (_compOp != 0xFFFFFFFFu) {
-    compOpFirst = compOpLast = _compOp;
+  // Remove '@' from the style name if not running a deep benchmark.
+  strcpy(styleString, styleKindNameList[styleIdx]);
+  memset(cpmsTotal, 0, sizeof(cpmsTotal));
+
+  if (_saveOverview) {
+    overviewCtx.fillAll(BLRgba32(0xFF000000u));
+    overviewCtx.strokeRect(BLRect(0.5, 0.5, overviewImage.width() - 1, overviewImage.height() - 1), BLRgba32(0xFFFFFFFF));
   }
 
-  json.beforeRecord().openObject();
-  json.beforeRecord().addKey("name").addString(backend.name());
-  backend.serializeInfo(json);
-  json.beforeRecord().addKey("records").openArray();
+  for (uint32_t sizeId = 0; sizeId < _sizeCount; sizeId++) {
+    params.shapeSize = benchShapeSizeList[sizeId];
+    uint64_t duration;
 
-  for (uint32_t compOp = compOpFirst; compOp <= compOpLast; compOp++) {
-    params.compOp = BLCompOp(compOp);
-    if (!backend.supportsCompOp(params.compOp))
-      continue;
+    for (int i = 0; i < 20000; i++) {
+      duration = runSingleTest(backend, params);
+    }
 
-    for (uint32_t styleIdx = 0; styleIdx < 1; styleIdx++) {
-      StyleKind style = StyleKind(styleIdx);
-      if (!isStyleEnabled(style) || !backend.supportsStyle(style))
-        continue;
-      params.style = style;
+    cpms[sizeId] = double(params.quantity) * double(1000) / double(duration);
+    cpmsTotal[sizeId] += cpms[sizeId];
 
-      // Remove '@' from the style name if not running a deep benchmark.
-      strcpy(styleString, styleKindNameList[styleIdx]);
-
-      if (!_deepBench) {
-        char* x = strchr(styleString, '@');
-        if (x != nullptr) x[0] = '\0';
+    if (_saveOverview) {
+      overviewCtx.blitImage(BLPointI(1 + (sizeId * (_width + 1)), 1), backend._surface);
+      overviewCtx.fillRect(BLRectI(1 + (sizeId * (_width + 1)) + _width, 1, 1, _height), BLRgba32(0xFFFFFFFF));
+      if (sizeId == _sizeCount - 1) {
+        snprintf(fileName, 256, "%s-%s-%s-%s.png",
+          backend._name,
+          testKindNameList[uint32_t(params.testKind)],
+          compOpNameList[uint32_t(params.compOp)],
+          styleString);
+        spacesToUnderscores(fileName);
+        overviewImage.writeToFile(fileName);
       }
-
-      memset(cpmsTotal, 0, sizeof(cpmsTotal));
-
-//      printf(benchBorderStr);
-//      printf(benchHeaderStr, backend._name);
-//      printf(benchBorderStr);
-
-      for (uint32_t testIdx = 0; testIdx < 12; testIdx++) {
-        params.testKind = TestKind(testIdx);
-
-        if (_saveOverview) {
-          overviewCtx.fillAll(BLRgba32(0xFF000000u));
-          overviewCtx.strokeRect(BLRect(0.5, 0.5, overviewImage.width() - 1, overviewImage.height() - 1), BLRgba32(0xFFFFFFFF));
-        }
-
-        for (uint32_t sizeId = 0; sizeId < _sizeCount; sizeId++) {
-          params.shapeSize = benchShapeSizeList[sizeId];
-          uint64_t duration = runSingleTest(backend, params);
-
-          cpms[sizeId] = double(params.quantity) * double(1000) / double(duration);
-          cpmsTotal[sizeId] += cpms[sizeId];
-
-          if (_saveOverview) {
-            overviewCtx.blitImage(BLPointI(1 + (sizeId * (_width + 1)), 1), backend._surface);
-            overviewCtx.fillRect(BLRectI(1 + (sizeId * (_width + 1)) + _width, 1, 1, _height), BLRgba32(0xFFFFFFFF));
-            if (sizeId == _sizeCount - 1) {
-              snprintf(fileName, 256, "%s-%s-%s-%s.png",
-                backend._name,
-                testKindNameList[uint32_t(params.testKind)],
-                compOpNameList[uint32_t(params.compOp)],
-                styleString);
-              spacesToUnderscores(fileName);
-              overviewImage.writeToFile(fileName);
-            }
-          }
-
-          if (_saveImages) {
-            // Save only the last two as these are easier to compare visually.
-            if (sizeId >= _sizeCount - 2) {
-              snprintf(fileName, 256, "%s-%s-%s-%s-%c.png",
-                backend._name,
-                testKindNameList[uint32_t(params.testKind)],
-                compOpNameList[uint32_t(params.compOp)],
-                styleString,
-                'A' + sizeId);
-              spacesToUnderscores(fileName);
-              backend._surface.writeToFile(fileName);
-            }
-          }
-        }
-
-        for (uint32_t sizeId = 0; sizeId < _sizeCount; sizeId++)
-          fmt[sizeId].format(cpms[sizeId]);
-
-//        printf(benchDataFmt,
-//          testKindNameList[uint32_t(params.testKind)],
-//          compOpNameList[uint32_t(params.compOp)],
-//          styleString,
-//          fmt[0].data,
-//          fmt[1].data,
-//          fmt[2].data,
-//          fmt[3].data,
-//          fmt[4].data,
-//          fmt[5].data);
-
-        json.beforeRecord()
-            .openObject()
-            .addKey("test").addString(testKindNameList[uint32_t(params.testKind)])
-            .comma().alignTo(36).addKey("compOp").addString(compOpNameList[uint32_t(params.compOp)])
-            .comma().alignTo(58).addKey("style").addString(styleString);
-
-        json.addKey("rcpms").openArray();
-        for (uint32_t sizeId = 0; sizeId < _sizeCount; sizeId++) {
-          json.addStringWithoutQuotes(fmt[sizeId].data);
-        }
-        json.closeArray();
-
-        json.closeObject();
-      }
-
-      for (uint32_t sizeId = 0; sizeId < _sizeCount; sizeId++)
-        fmt[sizeId].format(cpmsTotal[sizeId]);
-
-//      printf(benchBorderStr);
-//      printf(benchDataFmt,
-//        "Total",
-//        compOpNameList[uint32_t(params.compOp)],
-//        styleString,
-//        fmt[0].data,
-//        fmt[1].data,
-//        fmt[2].data,
-//        fmt[3].data,
-//        fmt[4].data,
-//        fmt[5].data);
-//      printf(benchBorderStr);
-//      printf("\n");
     }
   }
 
-  json.closeArray(true);
-  json.closeObject(true);
+  for (uint32_t sizeId = 0; sizeId < _sizeCount; sizeId++)
+    fmt[sizeId].format(cpms[sizeId]);
+
+  for (uint32_t sizeId = 0; sizeId < _sizeCount; sizeId++)
+    fmt[sizeId].format(cpmsTotal[sizeId]);
 
   return 0;
 }
