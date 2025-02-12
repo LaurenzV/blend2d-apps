@@ -3,6 +3,7 @@
 namespace blbench {
     struct TinySkiaModule : public Backend {
         ts_pixmap* pixmap {};
+        ts_stroke stroke;
 
         TinySkiaModule();
         ~TinySkiaModule() override;
@@ -49,6 +50,7 @@ namespace blbench {
         int h = int(_params.screenH);
 
         pixmap = ts_pixmap_create(w, h);
+        stroke = ts_stroke {(float) _params.strokeWidth };
     }
 
     void TinySkiaModule::afterRun() {
@@ -86,7 +88,12 @@ namespace blbench {
                 ts_color color = convert_color(_rndColor.nextRgba32());
                 ts_rect rect = convert_rect_i(_rndCoord.nextRectI(bounds, wh, wh));
 
-                ts_pixmap_fill_rect(pixmap, rect, t, color, toTinySkiaOperator(_params.compOp));
+                if (op == RenderOp::kStroke) {
+                    ts_pixmap_stroke_rect(pixmap, rect, t, color, stroke, toTinySkiaOperator(_params.compOp));
+                }   else {
+                    ts_pixmap_fill_rect(pixmap, rect, t, color, toTinySkiaOperator(_params.compOp));
+                }
+
             }
         }
     }
@@ -102,7 +109,11 @@ namespace blbench {
                 ts_color color = convert_color(_rndColor.nextRgba32());
                 ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
 
-                ts_pixmap_fill_rect(pixmap, rect, t, color, toTinySkiaOperator(_params.compOp));
+                if (op == RenderOp::kStroke) {
+                    ts_pixmap_stroke_rect(pixmap, rect, t, color, stroke, toTinySkiaOperator(_params.compOp));
+                }   else {
+                    ts_pixmap_fill_rect(pixmap, rect, t, color, toTinySkiaOperator(_params.compOp));
+                }
             }
         }
     }
@@ -122,7 +133,11 @@ namespace blbench {
                 ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
                 ts_color color = convert_color(_rndColor.nextRgba32());
 
-                ts_pixmap_fill_rect(pixmap, rect, t, color, toTinySkiaOperator(_params.compOp));
+                if (op == RenderOp::kStroke) {
+                    ts_pixmap_fill_rect(pixmap, rect, t, color, toTinySkiaOperator(_params.compOp));
+                }   else {
+                    ts_pixmap_stroke_rect(pixmap, rect, t, color, stroke, toTinySkiaOperator(_params.compOp));
+                }
             }
         }
     }
@@ -156,14 +171,24 @@ namespace blbench {
                 ts_line_to(builder, x, y);
             }
 
+            ts_close(builder);
+
             ts_path *path = ts_path_builder_finish(builder);
-            ts_pixmap_fill_path(pixmap, path, t, color, toTinySkiaOperator(_params.compOp));
+            ts_fill_rule fr = (op == RenderOp::kFillEvenOdd ? ts_fill_rule::EvenOdd : ts_fill_rule::Winding);
+
+            if (op == RenderOp::kStroke) {
+                ts_pixmap_stroke_path(pixmap, path, t, color, stroke, toTinySkiaOperator(_params.compOp));
+            }   else {
+                ts_pixmap_fill_path(pixmap, path, t, color, fr, toTinySkiaOperator(_params.compOp));
+            }
 
             ts_path_destroy(path);
         }
     }
 
     void TinySkiaModule::renderShape(RenderOp op, ShapeData shape) {
+        // TODO: Placeholder
+        renderRectRotated(op);
     }
 
     ts_color TinySkiaModule::convert_color(BLRgba32 bl_color) {
