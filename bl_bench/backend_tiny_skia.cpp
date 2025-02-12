@@ -134,20 +134,64 @@ namespace blbench {
                 ts_color color = convert_color(_rndColor.nextRgba32());
 
                 if (op == RenderOp::kStroke) {
-                    ts_pixmap_fill_rect(pixmap, rect, t, color, toTinySkiaOperator(_params.compOp));
-                }   else {
                     ts_pixmap_stroke_rect(pixmap, rect, t, color, stroke, toTinySkiaOperator(_params.compOp));
+                }   else {
+                    ts_pixmap_fill_rect(pixmap, rect, t, color, toTinySkiaOperator(_params.compOp));
                 }
             }
         }
     }
     void TinySkiaModule::renderRoundF(RenderOp op) {
-        // TODO: Placeholder
-        renderRectF(op);
+        BLSize bounds(_params.screenW, _params.screenH);
+        StyleKind style = _params.style;
+        ts_transform t = ts_transform_identity();
+        double wh = _params.shapeSize;
+
+        if (style == StyleKind::kSolid) {
+            for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
+                double radius = _rndExtra.nextDouble(4.0, 40.0);
+                ts_color color = convert_color(_rndColor.nextRgba32());
+                ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
+
+                ts_path *p = ts_rounded_rect(rect, (float) radius, (float) radius);
+
+                if (op == RenderOp::kStroke) {
+                    ts_pixmap_stroke_path(pixmap, p, t, color, stroke, toTinySkiaOperator(_params.compOp));
+                }   else {
+                    ts_pixmap_fill_path(pixmap, p, t, color, ts_fill_rule::Winding, toTinySkiaOperator(_params.compOp));
+                }
+
+                ts_path_destroy(p);
+            }
+        }
     }
     void TinySkiaModule::renderRoundRotated(RenderOp op) {
-        // TODO: Placeholder
-        renderRectRotated(op);
+        BLSize bounds(_params.screenW, _params.screenH);
+        StyleKind style = _params.style;
+
+        double cx = double(_params.screenW) * 0.5;
+        double cy = double(_params.screenH) * 0.5;
+        double wh = _params.shapeSize;
+        double angle = 0.0;
+
+        if (style == StyleKind::kSolid) {
+            for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++, angle += 0.01) {
+                ts_transform t = ts_transform_rotate_at(angle * 180.0 / 3.141592653, cx, cy);
+                double radius = _rndExtra.nextDouble(4.0, 40.0);
+                ts_color color = convert_color(_rndColor.nextRgba32());
+                ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
+
+                ts_path *p = ts_rounded_rect(rect, (float) radius, (float) radius);
+
+                if (op == RenderOp::kStroke) {
+                    ts_pixmap_stroke_path(pixmap, p, t, color, stroke, toTinySkiaOperator(_params.compOp));
+                }   else {
+                    ts_pixmap_fill_path(pixmap, p, t, color, ts_fill_rule::Winding, toTinySkiaOperator(_params.compOp));
+                }
+
+                ts_path_destroy(p);
+            }
+        }
     }
 
     void TinySkiaModule::renderPolygon(RenderOp op, uint32_t complexity) {
