@@ -45,24 +45,24 @@
 namespace blbench {
 
 static constexpr uint32_t kSupportedBackends =
-#if defined(BLEND2D_APPS_ENABLE_AGG)
-  (1u << uint32_t(BackendKind::kAGG)) |
-#endif
-#if defined(BLEND2D_APPS_ENABLE_CAIRO)
-  (1u << uint32_t(BackendKind::kCairo)) |
-#endif
-#if defined(BLEND2D_APPS_ENABLE_QT)
-  (1u << uint32_t(BackendKind::kQt)) |
-#endif
-#if defined(BLEND2D_APPS_ENABLE_SKIA)
-  (1u << uint32_t(BackendKind::kSkia)) |
-#endif
-#if defined(BLEND2D_APPS_ENABLE_JUCE)
-  (1u << uint32_t(BackendKind::kJUCE)) |
-#endif
-#if defined(BLEND2D_APPS_ENABLE_COREGRAPHICS)
-  (1u << uint32_t(BackendKind::kCoreGraphics)) |
-#endif
+//#if defined(BLEND2D_APPS_ENABLE_AGG)
+//  (1u << uint32_t(BackendKind::kAGG)) |
+//#endif
+//#if defined(BLEND2D_APPS_ENABLE_CAIRO)
+//  (1u << uint32_t(BackendKind::kCairo)) |
+//#endif
+//#if defined(BLEND2D_APPS_ENABLE_QT)
+//  (1u << uint32_t(BackendKind::kQt)) |
+//#endif
+//#if defined(BLEND2D_APPS_ENABLE_SKIA)
+//  (1u << uint32_t(BackendKind::kSkia)) |
+//#endif
+//#if defined(BLEND2D_APPS_ENABLE_JUCE)
+//  (1u << uint32_t(BackendKind::kJUCE)) |
+//#endif
+//#if defined(BLEND2D_APPS_ENABLE_COREGRAPHICS)
+//  (1u << uint32_t(BackendKind::kCoreGraphics)) |
+//#endif
 #if defined(BLEND2D_APPS_ENABLE_TINY_SKIA)
   (1u << uint32_t(BackendKind::kTinySkia)) |
 #endif
@@ -75,7 +75,7 @@ static const char* backendKindNameList[] = {
   "Qt",
   "Skia",
   "JUCE",
-  "CoreGraphics"
+  "CoreGraphics",
   "tiny-skia"
 };
 
@@ -665,6 +665,10 @@ int BenchApp::run() {
 //      backend = createBlend2DBackend(4);
 //      runBackendTests(*backend, params, json);
 //      delete backend;
+//
+//      backend = createBlend2DBackend(8);
+//      runBackendTests(*backend, params, json);
+//      delete backend;
     }
 
 #if defined(BLEND2D_APPS_ENABLE_AGG)
@@ -787,7 +791,7 @@ int BenchApp::runBackendTests(Backend& backend, BenchParams& params, JSONBuilder
 //      printf(benchHeaderStr, backend._name);
 //      printf(benchBorderStr);
 
-      for (uint32_t testIdx = 0; testIdx < 12; testIdx++) {
+      for (uint32_t testIdx = 0; testIdx < kTestKindCount; testIdx++) {
         params.testKind = TestKind(testIdx);
 
         if (_saveOverview) {
@@ -806,11 +810,11 @@ int BenchApp::runBackendTests(Backend& backend, BenchParams& params, JSONBuilder
             overviewCtx.blitImage(BLPointI(1 + (sizeId * (_width + 1)), 1), backend._surface);
             overviewCtx.fillRect(BLRectI(1 + (sizeId * (_width + 1)) + _width, 1, 1, _height), BLRgba32(0xFFFFFFFF));
             if (sizeId == _sizeCount - 1) {
-              snprintf(fileName, 256, "%s-%s-%s-%s.png",
-                backend._name,
+              snprintf(fileName, 256, "images/%s-%s-%s-%s.png",
                 testKindNameList[uint32_t(params.testKind)],
                 compOpNameList[uint32_t(params.compOp)],
-                styleString);
+                styleString,
+                backend._name);
               spacesToUnderscores(fileName);
               overviewImage.writeToFile(fileName);
             }
