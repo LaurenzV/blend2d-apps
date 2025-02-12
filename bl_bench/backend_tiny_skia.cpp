@@ -187,8 +187,53 @@ namespace blbench {
     }
 
     void TinySkiaModule::renderShape(RenderOp op, ShapeData shape) {
-        // TODO: Placeholder
-        renderRectRotated(op);
+        BLSizeI bounds(_params.screenW - _params.shapeSize, _params.screenH - _params.shapeSize);
+        StyleKind style = _params.style;
+        double wh = double(_params.shapeSize);
+
+        ts_path_builder *builder = ts_path_builder_create();
+        ShapeIterator it(shape);
+
+        while (it.hasCommand()) {
+            if (it.isMoveTo()) {
+                ts_move_to(builder, it.x(0) * wh, it.y(0) * wh);
+            }
+            else if (it.isLineTo()) {
+                ts_line_to(builder, it.x(0) * wh, it.y(0) * wh);
+            }
+            else if (it.isQuadTo()) {
+                ts_quad_to(builder, it.x(0) * wh, it.y(0) * wh,
+                           it.x(1) * wh, it.y(1) * wh);
+            }
+            else if (it.isCubicTo()) {
+                ts_cubic_to(builder, it.x(0) * wh, it.y(0) * wh,
+                            it.x(1) * wh, it.y(1) * wh,
+                            it.x(2) * wh, it.y(2) * wh);
+            }
+            else {
+                ts_close(builder);
+            }
+
+            it.next();
+        }
+
+        ts_path *path = ts_path_builder_finish(builder);
+        ts_fill_rule fr = (op == RenderOp::kFillEvenOdd ? ts_fill_rule::EvenOdd : ts_fill_rule::Winding);
+
+        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
+            BLPoint base(_rndCoord.nextPoint(bounds));
+            ts_color color = convert_color(_rndColor.nextRgba32());
+
+            ts_transform t = ts_transform_translate(base.x, base.y);
+
+            if (op == RenderOp::kStroke) {
+                ts_pixmap_stroke_path(pixmap, path, t, color, stroke, toTinySkiaOperator(_params.compOp));
+            }   else {
+                ts_pixmap_fill_path(pixmap, path, t, color, fr, toTinySkiaOperator(_params.compOp));
+            }
+        }
+
+        ts_path_destroy(path);
     }
 
     ts_color TinySkiaModule::convert_color(BLRgba32 bl_color) {
