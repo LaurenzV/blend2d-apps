@@ -39,7 +39,17 @@ namespace blbench {
     TinySkiaModule::~TinySkiaModule() {}
 
     bool TinySkiaModule::supportsCompOp(BLCompOp compOp) const {
-        return compOp == BL_COMP_OP_SRC_OVER || compOp == BL_COMP_OP_SRC_COPY;
+        return compOp == BL_COMP_OP_SRC_OVER || compOp == BL_COMP_OP_SRC_COPY ||
+               compOp == BL_COMP_OP_DST_OVER || compOp == BL_COMP_OP_SRC_IN ||
+               compOp == BL_COMP_OP_DST_IN || compOp == BL_COMP_OP_SRC_OUT ||
+               compOp == BL_COMP_OP_DST_OUT || compOp == BL_COMP_OP_SRC_ATOP ||
+               compOp == BL_COMP_OP_DST_ATOP || compOp == BL_COMP_OP_XOR ||
+               compOp == BL_COMP_OP_PLUS || compOp == BL_COMP_OP_MULTIPLY ||
+               compOp == BL_COMP_OP_SCREEN || compOp == BL_COMP_OP_OVERLAY ||
+               compOp == BL_COMP_OP_DARKEN || compOp == BL_COMP_OP_LIGHTEN ||
+               compOp == BL_COMP_OP_COLOR_DODGE || compOp == BL_COMP_OP_COLOR_BURN ||
+               compOp == BL_COMP_OP_HARD_LIGHT || compOp == BL_COMP_OP_SOFT_LIGHT ||
+               compOp == BL_COMP_OP_DIFFERENCE || compOp == BL_COMP_OP_EXCLUSION;
     }
 
     bool TinySkiaModule::supportsStyle(StyleKind style) const {
@@ -395,8 +405,50 @@ namespace blbench {
 
     ts_blend_mode TinySkiaModule::toTinySkiaOperator(uint32_t compOp) {
         switch (compOp) {
-            case BL_COMP_OP_SRC_OVER   : return ts_blend_mode::SourceOver;
-            case BL_COMP_OP_SRC_COPY   : return ts_blend_mode::SourceCopy;
+            case BL_COMP_OP_SRC_OVER   :
+                return ts_blend_mode::SourceOver;
+            case BL_COMP_OP_SRC_COPY   :
+                return ts_blend_mode::SourceCopy;
+            case BL_COMP_OP_DST_OVER   :
+                return ts_blend_mode::DestinationOver;
+            case BL_COMP_OP_SRC_IN     :
+                return ts_blend_mode::SourceIn;
+            case BL_COMP_OP_DST_IN     :
+                return ts_blend_mode::DestinationIn;
+            case BL_COMP_OP_SRC_OUT    :
+                return ts_blend_mode::SourceOut;
+            case BL_COMP_OP_DST_OUT    :
+                return ts_blend_mode::DestinationOut;
+            case BL_COMP_OP_SRC_ATOP   :
+                return ts_blend_mode::SourceAtop;
+            case BL_COMP_OP_DST_ATOP   :
+                return ts_blend_mode::DestinationAtop;
+            case BL_COMP_OP_XOR        :
+                return ts_blend_mode::Xor;
+            case BL_COMP_OP_PLUS       :
+                return ts_blend_mode::Plus;
+            case BL_COMP_OP_MULTIPLY   :
+                return ts_blend_mode::Multiply;
+            case BL_COMP_OP_SCREEN     :
+                return ts_blend_mode::Screen;
+            case BL_COMP_OP_OVERLAY    :
+                return ts_blend_mode::Overlay;
+            case BL_COMP_OP_DARKEN     :
+                return ts_blend_mode::Darken;
+            case BL_COMP_OP_LIGHTEN    :
+                return ts_blend_mode::Lighten;
+            case BL_COMP_OP_COLOR_DODGE:
+                return ts_blend_mode::ColorDodge;
+            case BL_COMP_OP_COLOR_BURN :
+                return ts_blend_mode::ColorBurn;
+            case BL_COMP_OP_HARD_LIGHT :
+                return ts_blend_mode::HardLight;
+            case BL_COMP_OP_SOFT_LIGHT :
+                return ts_blend_mode::SoftLight;
+            case BL_COMP_OP_DIFFERENCE :
+                return ts_blend_mode::Difference;
+            case BL_COMP_OP_EXCLUSION  :
+                return ts_blend_mode::Exclusion;
             default:
                 return ts_blend_mode::SourceOver;
         }
