@@ -23,7 +23,7 @@ namespace blbench {
         void renderPolygon(RenderOp op, uint32_t complexity) override;
         void renderShape(RenderOp op, ShapeData shape) override;
 
-        ts_color convert_color(BLRgba32 color);
+        ts_paint convert_color(BLRgba32 color);
         ts_rect convert_rect(BLRect rect);
         ts_rect convert_rect_i(BLRectI rect);
         ts_point convert_point(BLPoint rect);
@@ -76,7 +76,6 @@ namespace blbench {
 
     }
 
-
     void TinySkiaModule::renderRectA(RenderOp op) {
         ts_transform t = ts_transform_identity();
         BLSizeI bounds(_params.screenW, _params.screenH);
@@ -85,13 +84,13 @@ namespace blbench {
 
         if (style == StyleKind::kSolid) {
             for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
-                ts_color color = convert_color(_rndColor.nextRgba32());
+                ts_paint paint = convert_color(_rndColor.nextRgba32());
                 ts_rect rect = convert_rect_i(_rndCoord.nextRectI(bounds, wh, wh));
 
                 if (op == RenderOp::kStroke) {
-                    ts_pixmap_stroke_rect(pixmap, rect, t, color, stroke, toTinySkiaOperator(_params.compOp));
+                    ts_pixmap_stroke_rect(pixmap, rect, t, paint, stroke, toTinySkiaOperator(_params.compOp));
                 }   else {
-                    ts_pixmap_fill_rect(pixmap, rect, t, color, toTinySkiaOperator(_params.compOp));
+                    ts_pixmap_fill_rect(pixmap, rect, t, paint, toTinySkiaOperator(_params.compOp));
                 }
 
             }
@@ -106,13 +105,13 @@ namespace blbench {
 
         if (style == StyleKind::kSolid) {
             for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
-                ts_color color = convert_color(_rndColor.nextRgba32());
+                ts_paint paint = convert_color(_rndColor.nextRgba32());
                 ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
 
                 if (op == RenderOp::kStroke) {
-                    ts_pixmap_stroke_rect(pixmap, rect, t, color, stroke, toTinySkiaOperator(_params.compOp));
+                    ts_pixmap_stroke_rect(pixmap, rect, t, paint, stroke, toTinySkiaOperator(_params.compOp));
                 }   else {
-                    ts_pixmap_fill_rect(pixmap, rect, t, color, toTinySkiaOperator(_params.compOp));
+                    ts_pixmap_fill_rect(pixmap, rect, t, paint, toTinySkiaOperator(_params.compOp));
                 }
             }
         }
@@ -131,12 +130,13 @@ namespace blbench {
             for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++, angle += 0.01) {
                 ts_transform t = ts_transform_rotate_at(angle * 180.0 / 3.141592653, cx, cy);
                 ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
-                ts_color color = convert_color(_rndColor.nextRgba32());
+                ts_paint paint = convert_color(_rndColor.nextRgba32());
+
 
                 if (op == RenderOp::kStroke) {
-                    ts_pixmap_stroke_rect(pixmap, rect, t, color, stroke, toTinySkiaOperator(_params.compOp));
+                    ts_pixmap_stroke_rect(pixmap, rect, t, paint, stroke, toTinySkiaOperator(_params.compOp));
                 }   else {
-                    ts_pixmap_fill_rect(pixmap, rect, t, color, toTinySkiaOperator(_params.compOp));
+                    ts_pixmap_fill_rect(pixmap, rect, t, paint, toTinySkiaOperator(_params.compOp));
                 }
             }
         }
@@ -150,15 +150,15 @@ namespace blbench {
         if (style == StyleKind::kSolid) {
             for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
                 double radius = _rndExtra.nextDouble(4.0, 40.0);
-                ts_color color = convert_color(_rndColor.nextRgba32());
+                ts_paint paint = convert_color(_rndColor.nextRgba32());
                 ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
 
                 ts_path *p = ts_rounded_rect(rect, (float) radius, (float) radius);
 
                 if (op == RenderOp::kStroke) {
-                    ts_pixmap_stroke_path(pixmap, p, t, color, stroke, toTinySkiaOperator(_params.compOp));
+                    ts_pixmap_stroke_path(pixmap, p, t, paint, stroke, toTinySkiaOperator(_params.compOp));
                 }   else {
-                    ts_pixmap_fill_path(pixmap, p, t, color, ts_fill_rule::Winding, toTinySkiaOperator(_params.compOp));
+                    ts_pixmap_fill_path(pixmap, p, t, paint, ts_fill_rule::Winding, toTinySkiaOperator(_params.compOp));
                 }
 
                 ts_path_destroy(p);
@@ -178,15 +178,15 @@ namespace blbench {
             for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++, angle += 0.01) {
                 ts_transform t = ts_transform_rotate_at(angle * 180.0 / 3.141592653, cx, cy);
                 double radius = _rndExtra.nextDouble(4.0, 40.0);
-                ts_color color = convert_color(_rndColor.nextRgba32());
+                ts_paint paint = convert_color(_rndColor.nextRgba32());
                 ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
 
                 ts_path *p = ts_rounded_rect(rect, (float) radius, (float) radius);
 
                 if (op == RenderOp::kStroke) {
-                    ts_pixmap_stroke_path(pixmap, p, t, color, stroke, toTinySkiaOperator(_params.compOp));
+                    ts_pixmap_stroke_path(pixmap, p, t, paint, stroke, toTinySkiaOperator(_params.compOp));
                 }   else {
-                    ts_pixmap_fill_path(pixmap, p, t, color, ts_fill_rule::Winding, toTinySkiaOperator(_params.compOp));
+                    ts_pixmap_fill_path(pixmap, p, t, paint, ts_fill_rule::Winding, toTinySkiaOperator(_params.compOp));
                 }
 
                 ts_path_destroy(p);
@@ -201,7 +201,7 @@ namespace blbench {
         double wh = double(_params.shapeSize);
 
         for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
-            ts_color color = convert_color(_rndColor.nextRgba32());
+            ts_paint paint = convert_color(_rndColor.nextRgba32());
             ts_point base = convert_point(_rndCoord.nextPoint(bounds));
 
             double x = _rndCoord.nextDouble(base.x, base.x + wh);
@@ -221,9 +221,9 @@ namespace blbench {
             ts_fill_rule fr = (op == RenderOp::kFillEvenOdd ? ts_fill_rule::EvenOdd : ts_fill_rule::Winding);
 
             if (op == RenderOp::kStroke) {
-                ts_pixmap_stroke_path(pixmap, path, t, color, stroke, toTinySkiaOperator(_params.compOp));
+                ts_pixmap_stroke_path(pixmap, path, t, paint, stroke, toTinySkiaOperator(_params.compOp));
             }   else {
-                ts_pixmap_fill_path(pixmap, path, t, color, fr, toTinySkiaOperator(_params.compOp));
+                ts_pixmap_fill_path(pixmap, path, t, paint, fr, toTinySkiaOperator(_params.compOp));
             }
 
             ts_path_destroy(path);
@@ -266,22 +266,27 @@ namespace blbench {
 
         for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
             BLPoint base(_rndCoord.nextPoint(bounds));
-            ts_color color = convert_color(_rndColor.nextRgba32());
+            ts_paint paint = convert_color(_rndColor.nextRgba32());
 
             ts_transform t = ts_transform_translate(base.x, base.y);
 
             if (op == RenderOp::kStroke) {
-                ts_pixmap_stroke_path(pixmap, path, t, color, stroke, toTinySkiaOperator(_params.compOp));
+                ts_pixmap_stroke_path(pixmap, path, t, paint, stroke, toTinySkiaOperator(_params.compOp));
             }   else {
-                ts_pixmap_fill_path(pixmap, path, t, color, fr, toTinySkiaOperator(_params.compOp));
+                ts_pixmap_fill_path(pixmap, path, t, paint, fr, toTinySkiaOperator(_params.compOp));
             }
         }
 
         ts_path_destroy(path);
     }
 
-    ts_color TinySkiaModule::convert_color(BLRgba32 bl_color) {
-        return {(uint8_t) bl_color.r(), (uint8_t) bl_color.g(), (uint8_t) bl_color.b(), (uint8_t) bl_color.a()};
+    ts_paint TinySkiaModule::convert_color(BLRgba32 bl_color) {
+        ts_color color = {(uint8_t) bl_color.r(), (uint8_t) bl_color.g(), (uint8_t) bl_color.b(), (uint8_t) bl_color.a()};
+
+        ts_paint paint;
+        paint.tag = ts_paint::Tag::Color;
+        paint.color = ts_paint::Color_Body{ color };
+        return paint;
     }
 
     ts_rect TinySkiaModule::convert_rect(BLRect bl_rect) {
