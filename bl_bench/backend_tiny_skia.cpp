@@ -23,7 +23,7 @@ namespace blbench {
         void renderPolygon(RenderOp op, uint32_t complexity) override;
         void renderShape(RenderOp op, ShapeData shape) override;
 
-        inline ts_paint convert_style(const ts_rect& rect, StyleKind style);
+        inline ts_paint convert_style(const ts_rect& rect, StyleKind style, ts_transform t);
         ts_color gen_color();
         ts_rect convert_rect(BLRect rect);
         ts_rect convert_rect_i(BLRectI rect);
@@ -85,7 +85,7 @@ namespace blbench {
 
         for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
             ts_rect rect = convert_rect_i(_rndCoord.nextRectI(bounds, wh, wh));
-            ts_paint paint = convert_style(rect, style);
+            ts_paint paint = convert_style(rect, style, t);
 
             if (op == RenderOp::kStroke) {
                 ts_pixmap_stroke_rect(pixmap, rect, t, paint, stroke, toTinySkiaOperator(_params.compOp));
@@ -105,7 +105,7 @@ namespace blbench {
 
         for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
             ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
-            ts_paint paint = convert_style(rect, style);
+            ts_paint paint = convert_style(rect, style, t);
 
             if (op == RenderOp::kStroke) {
                 ts_pixmap_stroke_rect(pixmap, rect, t, paint, stroke, toTinySkiaOperator(_params.compOp));
@@ -120,6 +120,7 @@ namespace blbench {
     void TinySkiaModule::renderRectRotated(RenderOp op) {
         BLSize bounds(_params.screenW, _params.screenH);
         StyleKind style = _params.style;
+        ts_transform id = ts_transform_identity();
 
         double cx = double(_params.screenW) * 0.5;
         double cy = double(_params.screenH) * 0.5;
@@ -129,7 +130,7 @@ namespace blbench {
         for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++, angle += 0.01) {
             ts_transform t = ts_transform_rotate_at(angle * 180.0 / 3.141592653, cx, cy);
             ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
-            ts_paint paint = convert_style(rect, style);
+            ts_paint paint = convert_style(rect, style, id);
 
             if (op == RenderOp::kStroke) {
                 ts_pixmap_stroke_rect(pixmap, rect, t, paint, stroke, toTinySkiaOperator(_params.compOp));
@@ -150,7 +151,7 @@ namespace blbench {
         for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
             double radius = _rndExtra.nextDouble(4.0, 40.0);
             ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
-            ts_paint paint = convert_style(rect, style);
+            ts_paint paint = convert_style(rect, style, t);
 
             ts_path *p = ts_rounded_rect(rect, (float) radius, (float) radius);
 
@@ -168,30 +169,29 @@ namespace blbench {
     void TinySkiaModule::renderRoundRotated(RenderOp op) {
         BLSize bounds(_params.screenW, _params.screenH);
         StyleKind style = _params.style;
+        ts_transform t = ts_transform_identity();
 
         double cx = double(_params.screenW) * 0.5;
         double cy = double(_params.screenH) * 0.5;
         double wh = _params.shapeSize;
         double angle = 0.0;
 
-        if (style == StyleKind::kSolid) {
-            for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++, angle += 0.01) {
-                ts_transform t = ts_transform_rotate_at(angle * 180.0 / 3.141592653, cx, cy);
-                double radius = _rndExtra.nextDouble(4.0, 40.0);
-                ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
-                ts_paint paint = convert_style(rect, style);
+        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++, angle += 0.01) {
+            ts_transform t = ts_transform_rotate_at(angle * 180.0 / 3.141592653, cx, cy);
+            double radius = _rndExtra.nextDouble(4.0, 40.0);
+            ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
+            ts_paint paint = convert_style(rect, style, t);
 
-                ts_path *p = ts_rounded_rect(rect, (float) radius, (float) radius);
+            ts_path *p = ts_rounded_rect(rect, (float) radius, (float) radius);
 
-                if (op == RenderOp::kStroke) {
-                    ts_pixmap_stroke_path(pixmap, p, t, paint, stroke, toTinySkiaOperator(_params.compOp));
-                }   else {
-                    ts_pixmap_fill_path(pixmap, p, t, paint, ts_fill_rule::Winding, toTinySkiaOperator(_params.compOp));
-                }
-
-                ts_paint_destroy(paint);
-                ts_path_destroy(p);
+            if (op == RenderOp::kStroke) {
+                ts_pixmap_stroke_path(pixmap, p, t, paint, stroke, toTinySkiaOperator(_params.compOp));
+            }   else {
+                ts_pixmap_fill_path(pixmap, p, t, paint, ts_fill_rule::Winding, toTinySkiaOperator(_params.compOp));
             }
+
+            ts_paint_destroy(paint);
+            ts_path_destroy(p);
         }
     }
 
@@ -205,7 +205,7 @@ namespace blbench {
         for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
             ts_point base = convert_point(_rndCoord.nextPoint(bounds));
             ts_rect base_rect = {base.x, base.y, base.x + wh, base.y + wh};
-            ts_paint paint = convert_style(base_rect, style);
+            ts_paint paint = convert_style(base_rect, style, t);
 
             double x = _rndCoord.nextDouble(base.x, base.x + wh);
             double y = _rndCoord.nextDouble(base.y, base.y + wh);
@@ -271,9 +271,10 @@ namespace blbench {
         for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
             BLPoint base(_rndCoord.nextPoint(bounds));
             ts_rect base_rect = { (float) base.x, (float) base.y, (float) (base.x + wh), (float) (base.y + wh)};
-            ts_paint paint = convert_style(base_rect, style);
-
             ts_transform t = ts_transform_translate(base.x, base.y);
+            ts_transform inv_t = ts_transform_translate(-base.x, -base.y);
+            ts_paint paint = convert_style(base_rect, style, inv_t);
+
 
             if (op == RenderOp::kStroke) {
                 ts_pixmap_stroke_path(pixmap, path, t, paint, stroke, toTinySkiaOperator(_params.compOp));
@@ -294,9 +295,8 @@ namespace blbench {
         return color;
     }
 
-    inline ts_paint TinySkiaModule::convert_style(const ts_rect& rect, StyleKind style) {
+    inline ts_paint TinySkiaModule::convert_style(const ts_rect& rect, StyleKind style, ts_transform t) {
         ts_spread_mode mode;
-        ts_transform t = ts_transform_identity();
 
         float w = rect.x1 - rect.x0;
         float h = rect.y1 - rect.y0;
