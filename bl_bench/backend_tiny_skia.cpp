@@ -43,7 +43,7 @@ namespace blbench {
     }
 
     bool TinySkiaModule::supportsStyle(StyleKind style) const {
-        return style <= StyleKind::kLinearReflect;
+        return style <= StyleKind::kRadialReflect;
     }
 
     void TinySkiaModule::beforeRun() {
@@ -344,6 +344,30 @@ namespace blbench {
                 ts_paint paint;
                 paint.tag = ts_paint::Tag::LinearGradient;
                 paint.linear_gradient = ts_paint::LinearGradient_Body{ grad };
+                return paint;
+            }
+            case StyleKind::kRadialPad:
+            case StyleKind::kRadialRepeat:
+            case StyleKind::kRadialReflect: {
+                ts_color c0 = gen_color();
+                ts_color c1 = gen_color();
+                ts_color c2 = gen_color();
+
+                float x0 = rect.x0 + (w / 2);
+                float y0 = rect.y0 + (h / 2);
+                float r0 = (w + h) / 4;
+                float x1 = x0 - r0 / 2.0;
+                float y1 = y0 - r0 / 2.0;
+
+                ts_radial_gradient *grad = ts_radial_gradient_create(x1, y1, x0, y0, r0, mode, t);
+
+                ts_radial_gradient_push_stop(grad, {0.0, c0});
+                ts_radial_gradient_push_stop(grad, {0.5, c1});
+                ts_radial_gradient_push_stop(grad, {1.0, c2});
+
+                ts_paint paint;
+                paint.tag = ts_paint::Tag::RadialGradient;
+                paint.radial_gradient = ts_paint::RadialGradient_Body{ grad };
                 return paint;
             }
             default: {
