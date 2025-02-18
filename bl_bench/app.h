@@ -26,7 +26,7 @@ struct BenchApp {
   uint32_t _compOp = 0xFFFFFFFF;
   uint32_t _sizeCount = kBenchShapeSizeCount;
   uint32_t _quantity = 0;
-  uint32_t _repeat = 4;
+  uint32_t _repeat = 10;
   uint32_t _backends = 0xFFFFFFFF;
 
   bool _saveImages = false;

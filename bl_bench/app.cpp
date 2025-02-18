@@ -46,27 +46,27 @@
 namespace blbench {
 
 static constexpr uint32_t kSupportedBackends =
-#if defined(BLEND2D_APPS_ENABLE_AGG)
-  (1u << uint32_t(BackendKind::kAGG)) |
-#endif
-#if defined(BLEND2D_APPS_ENABLE_CAIRO)
-  (1u << uint32_t(BackendKind::kCairo)) |
-#endif
-#if defined(BLEND2D_APPS_ENABLE_QT)
-  (1u << uint32_t(BackendKind::kQt)) |
-#endif
-#if defined(BLEND2D_APPS_ENABLE_SKIA)
-  (1u << uint32_t(BackendKind::kSkia)) |
-#endif
-#if defined(BLEND2D_APPS_ENABLE_JUCE)
-  (1u << uint32_t(BackendKind::kJUCE)) |
-#endif
-#if defined(BLEND2D_APPS_ENABLE_COREGRAPHICS)
-  (1u << uint32_t(BackendKind::kCoreGraphics)) |
-#endif
-#if defined(BLEND2D_APPS_ENABLE_TINY_SKIA)
-  (1u << uint32_t(BackendKind::kTinySkia)) |
-#endif
+//#if defined(BLEND2D_APPS_ENABLE_AGG)
+//  (1u << uint32_t(BackendKind::kAGG)) |
+//#endif
+//#if defined(BLEND2D_APPS_ENABLE_CAIRO)
+//  (1u << uint32_t(BackendKind::kCairo)) |
+//#endif
+//#if defined(BLEND2D_APPS_ENABLE_QT)
+//  (1u << uint32_t(BackendKind::kQt)) |
+//#endif
+//#if defined(BLEND2D_APPS_ENABLE_SKIA)
+//  (1u << uint32_t(BackendKind::kSkia)) |
+//#endif
+//#if defined(BLEND2D_APPS_ENABLE_JUCE)
+//  (1u << uint32_t(BackendKind::kJUCE)) |
+//#endif
+//#if defined(BLEND2D_APPS_ENABLE_COREGRAPHICS)
+//  (1u << uint32_t(BackendKind::kCoreGraphics)) |
+//#endif
+//#if defined(BLEND2D_APPS_ENABLE_TINY_SKIA)
+//  (1u << uint32_t(BackendKind::kTinySkia)) |
+//#endif
 #if defined(BLEND2D_APPS_ENABLE_CPU_SPARSE)
 (1u << uint32_t(BackendKind::kCpuSparse)) |
 #endif
@@ -80,7 +80,8 @@ static const char* backendKindNameList[] = {
   "Skia",
   "JUCE",
   "CoreGraphics",
-  "tiny-skia"
+  "tiny-skia",
+  "cpu-sparse"
 };
 
 static const char* testKindNameList[] = {
@@ -691,6 +692,14 @@ int BenchApp::run() {
     }
 #endif
 
+#if defined(BLEND2D_APPS_ENABLE_CPU_SPARSE)
+      if (isBackendEnabled(BackendKind::kCpuSparse)) {
+          Backend* backend = createCpuSparseBackend();
+          runBackendTests(*backend, params, json);
+          delete backend;
+      }
+#endif
+
 #if defined(BLEND2D_APPS_ENABLE_CAIRO)
     if (isBackendEnabled(BackendKind::kCairo)) {
       Backend* backend = createCairoBackend();
@@ -759,7 +768,7 @@ int BenchApp::runBackendTests(Backend& backend, BenchParams& params, JSONBuilder
   DurationFormat fmt[kBenchShapeSizeCount] {};
 
   uint32_t compOpFirst = BL_COMP_OP_SRC_OVER;
-  uint32_t compOpLast  = BL_COMP_OP_SRC_COPY;
+  uint32_t compOpLast  = BL_COMP_OP_SRC_OVER;
 
   if (_compOp != 0xFFFFFFFFu) {
     compOpFirst = compOpLast = _compOp;

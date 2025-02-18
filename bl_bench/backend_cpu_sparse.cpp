@@ -1,461 +1,340 @@
 #include "backend_cpu_sparse.h"
-//
-//namespace blbench {
-//    struct TinySkiaModule : public Backend {
-//        ts_pixmap* pixmap {};
-//        ts_stroke stroke;
-//
-//        TinySkiaModule();
-//        ~TinySkiaModule() override;
-//
-//        bool supportsCompOp(BLCompOp compOp) const override;
-//        bool supportsStyle(StyleKind style) const override;
-//
-//        void beforeRun() override;
-//        void flush() override;
-//        void afterRun() override;
-//
-//        void renderRectA(RenderOp op) override;
-//        void renderRectF(RenderOp op) override;
-//        void renderRectRotated(RenderOp op) override;
-//        void renderRoundF(RenderOp op) override;
-//        void renderRoundRotated(RenderOp op) override;
-//        void renderPolygon(RenderOp op, uint32_t complexity) override;
-//        void renderShape(RenderOp op, ShapeData shape) override;
-//
-//        inline ts_paint convert_style(const ts_rect& rect, StyleKind style, ts_transform t);
-//        ts_color gen_color();
-//        ts_rect convert_rect(BLRect rect);
-//        ts_rect convert_rect_i(BLRectI rect);
-//        ts_point convert_point(BLPoint rect);
-//
-//        ts_blend_mode toTinySkiaOperator(uint32_t compOp);
-//    };
-//
-//    TinySkiaModule::TinySkiaModule() {
-//        strcpy(_name, "tiny-skia");
-//    }
-//
-//    TinySkiaModule::~TinySkiaModule() {}
-//
-//    bool TinySkiaModule::supportsCompOp(BLCompOp compOp) const {
-//        return compOp == BL_COMP_OP_SRC_OVER || compOp == BL_COMP_OP_SRC_COPY ||
-//               compOp == BL_COMP_OP_DST_OVER || compOp == BL_COMP_OP_SRC_IN ||
-//               compOp == BL_COMP_OP_DST_IN || compOp == BL_COMP_OP_SRC_OUT ||
-//               compOp == BL_COMP_OP_DST_OUT || compOp == BL_COMP_OP_SRC_ATOP ||
-//               compOp == BL_COMP_OP_DST_ATOP || compOp == BL_COMP_OP_XOR ||
-//               compOp == BL_COMP_OP_PLUS || compOp == BL_COMP_OP_MULTIPLY ||
-//               compOp == BL_COMP_OP_SCREEN || compOp == BL_COMP_OP_OVERLAY ||
-//               compOp == BL_COMP_OP_DARKEN || compOp == BL_COMP_OP_LIGHTEN ||
-//               compOp == BL_COMP_OP_COLOR_DODGE || compOp == BL_COMP_OP_COLOR_BURN ||
-//               compOp == BL_COMP_OP_HARD_LIGHT || compOp == BL_COMP_OP_SOFT_LIGHT ||
-//               compOp == BL_COMP_OP_DIFFERENCE || compOp == BL_COMP_OP_EXCLUSION;
-//    }
-//
-//    bool TinySkiaModule::supportsStyle(StyleKind style) const {
-//        return style <= StyleKind::kRadialReflect;
-//    }
-//
-//    void TinySkiaModule::beforeRun() {
-//        int w = int(_params.screenW);
-//        int h = int(_params.screenH);
-//
-//        pixmap = ts_pixmap_create(w, h);
-//        stroke = ts_stroke {(float) _params.strokeWidth };
-//    }
-//
-//    void TinySkiaModule::afterRun() {
-//        int w = int(_params.screenW);
-//        int h = int(_params.screenH);
-//
-//        BLImageData dstData;
-//        _surface.create(int(w), int(h), BL_FORMAT_PRGB32);
-//        _surface.makeMutable(&dstData);
-//
-//        auto data = ts_data(pixmap);
-//        auto bytes = ts_argb_data(data);
-//
-//        memcpy(
-//                static_cast<uint8_t*>(dstData.pixelData),
-//                bytes,
-//                w * h * 4);
-//        ts_argb_destroy(data);
-//        ts_pixmap_destroy(pixmap);
-//    }
-//
-//    void TinySkiaModule::flush() {
-//
-//    }
-//
-//    void TinySkiaModule::renderRectA(RenderOp op) {
-//        ts_transform t = ts_transform_identity();
-//        BLSizeI bounds(_params.screenW, _params.screenH);
-//        StyleKind style = _params.style;
-//        int wh = _params.shapeSize;
-//
-//        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
-//            ts_rect rect = convert_rect_i(_rndCoord.nextRectI(bounds, wh, wh));
-//            ts_paint paint = convert_style(rect, style, t);
-//
-//            if (op == RenderOp::kStroke) {
-//                ts_pixmap_stroke_rect(pixmap, rect, t, paint, stroke, toTinySkiaOperator(_params.compOp));
-//            }   else {
-//                ts_pixmap_fill_rect(pixmap, rect, t, paint, toTinySkiaOperator(_params.compOp));
-//            }
-//
-//            ts_paint_destroy(paint);
-//        }
-//    }
-//
-//    void TinySkiaModule::renderRectF(RenderOp op) {
-//        ts_transform t = ts_transform_identity();
-//        BLSizeI bounds(_params.screenW, _params.screenH);
-//        StyleKind style = _params.style;
-//        int wh = _params.shapeSize;
-//
-//        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
-//            ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
-//            ts_paint paint = convert_style(rect, style, t);
-//
-//            if (op == RenderOp::kStroke) {
-//                ts_pixmap_stroke_rect(pixmap, rect, t, paint, stroke, toTinySkiaOperator(_params.compOp));
-//            }   else {
-//                ts_pixmap_fill_rect(pixmap, rect, t, paint, toTinySkiaOperator(_params.compOp));
-//            }
-//
-//            ts_paint_destroy(paint);
-//        }
-//    }
-//
-//    void TinySkiaModule::renderRectRotated(RenderOp op) {
-//        BLSize bounds(_params.screenW, _params.screenH);
-//        StyleKind style = _params.style;
-//        ts_transform id = ts_transform_identity();
-//
-//        double cx = double(_params.screenW) * 0.5;
-//        double cy = double(_params.screenH) * 0.5;
-//        double wh = _params.shapeSize;
-//        double angle = 0.0;
-//
-//        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++, angle += 0.01) {
-//            ts_transform t = ts_transform_rotate_at(angle * 180.0 / 3.141592653, cx, cy);
-//            ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
-//            ts_paint paint = convert_style(rect, style, id);
-//
-//            if (op == RenderOp::kStroke) {
-//                ts_pixmap_stroke_rect(pixmap, rect, t, paint, stroke, toTinySkiaOperator(_params.compOp));
-//            }   else {
-//                ts_pixmap_fill_rect(pixmap, rect, t, paint, toTinySkiaOperator(_params.compOp));
-//            }
-//
-//            ts_paint_destroy(paint);
-//        }
-//    }
-//
-//    void TinySkiaModule::renderRoundF(RenderOp op) {
-//        BLSize bounds(_params.screenW, _params.screenH);
-//        StyleKind style = _params.style;
-//        ts_transform t = ts_transform_identity();
-//        double wh = _params.shapeSize;
-//
-//        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
-//            double radius = _rndExtra.nextDouble(4.0, 40.0);
-//            ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
-//            ts_paint paint = convert_style(rect, style, t);
-//
-//            ts_path *p = ts_rounded_rect(rect, (float) radius, (float) radius);
-//
-//            if (op == RenderOp::kStroke) {
-//                ts_pixmap_stroke_path(pixmap, p, t, paint, stroke, toTinySkiaOperator(_params.compOp));
-//            }   else {
-//                ts_pixmap_fill_path(pixmap, p, t, paint, ts_fill_rule::Winding, toTinySkiaOperator(_params.compOp));
-//            }
-//
-//            ts_paint_destroy(paint);
-//            ts_path_destroy(p);
-//        }
-//    }
-//
-//    void TinySkiaModule::renderRoundRotated(RenderOp op) {
-//        BLSize bounds(_params.screenW, _params.screenH);
-//        StyleKind style = _params.style;
-//        ts_transform t = ts_transform_identity();
-//
-//        double cx = double(_params.screenW) * 0.5;
-//        double cy = double(_params.screenH) * 0.5;
-//        double wh = _params.shapeSize;
-//        double angle = 0.0;
-//
-//        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++, angle += 0.01) {
-//            ts_transform t = ts_transform_rotate_at(angle * 180.0 / 3.141592653, cx, cy);
-//            double radius = _rndExtra.nextDouble(4.0, 40.0);
-//            ts_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
-//            ts_paint paint = convert_style(rect, style, t);
-//
-//            ts_path *p = ts_rounded_rect(rect, (float) radius, (float) radius);
-//
-//            if (op == RenderOp::kStroke) {
-//                ts_pixmap_stroke_path(pixmap, p, t, paint, stroke, toTinySkiaOperator(_params.compOp));
-//            }   else {
-//                ts_pixmap_fill_path(pixmap, p, t, paint, ts_fill_rule::Winding, toTinySkiaOperator(_params.compOp));
-//            }
-//
-//            ts_paint_destroy(paint);
-//            ts_path_destroy(p);
-//        }
-//    }
-//
-//    void TinySkiaModule::renderPolygon(RenderOp op, uint32_t complexity) {
-//        BLSizeI bounds(_params.screenW - _params.shapeSize,
-//                       _params.screenH - _params.shapeSize);
-//        ts_transform t = ts_transform_identity();
-//        float wh = (float) _params.shapeSize;
-//        StyleKind style = _params.style;
-//
-//        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
-//            ts_point base = convert_point(_rndCoord.nextPoint(bounds));
-//            ts_rect base_rect = {base.x, base.y, base.x + wh, base.y + wh};
-//            ts_paint paint = convert_style(base_rect, style, t);
-//
-//            double x = _rndCoord.nextDouble(base.x, base.x + wh);
-//            double y = _rndCoord.nextDouble(base.y, base.y + wh);
-//
-//            ts_path_builder *builder = ts_path_builder_create();
-//            ts_move_to(builder, x, y);
-//            for (uint32_t p = 1; p < complexity; p++) {
-//                x = _rndCoord.nextDouble(base.x, base.x + wh);
-//                y = _rndCoord.nextDouble(base.y, base.y + wh);
-//                ts_line_to(builder, x, y);
-//            }
-//
-//            ts_close(builder);
-//
-//            ts_path *path = ts_path_builder_finish(builder);
-//            ts_fill_rule fr = (op == RenderOp::kFillEvenOdd ? ts_fill_rule::EvenOdd : ts_fill_rule::Winding);
-//
-//            if (op == RenderOp::kStroke) {
-//                ts_pixmap_stroke_path(pixmap, path, t, paint, stroke, toTinySkiaOperator(_params.compOp));
-//            }   else {
-//                ts_pixmap_fill_path(pixmap, path, t, paint, fr, toTinySkiaOperator(_params.compOp));
-//            }
-//
-//            ts_paint_destroy(paint);
-//            ts_path_destroy(path);
-//        }
-//    }
-//
-//    void TinySkiaModule::renderShape(RenderOp op, ShapeData shape) {
-//        BLSizeI bounds(_params.screenW - _params.shapeSize, _params.screenH - _params.shapeSize);
-//        StyleKind style = _params.style;
-//        double wh = double(_params.shapeSize);
-//
-//        ts_path_builder *builder = ts_path_builder_create();
-//        ShapeIterator it(shape);
-//
-//        while (it.hasCommand()) {
-//            if (it.isMoveTo()) {
-//                ts_move_to(builder, it.x(0) * wh, it.y(0) * wh);
-//            }
-//            else if (it.isLineTo()) {
-//                ts_line_to(builder, it.x(0) * wh, it.y(0) * wh);
-//            }
-//            else if (it.isQuadTo()) {
-//                ts_quad_to(builder, it.x(0) * wh, it.y(0) * wh,
-//                           it.x(1) * wh, it.y(1) * wh);
-//            }
-//            else if (it.isCubicTo()) {
-//                ts_cubic_to(builder, it.x(0) * wh, it.y(0) * wh,
-//                            it.x(1) * wh, it.y(1) * wh,
-//                            it.x(2) * wh, it.y(2) * wh);
-//            }
-//            else {
-//                ts_close(builder);
-//            }
-//
-//            it.next();
-//        }
-//
-//        ts_path *path = ts_path_builder_finish(builder);
-//        ts_fill_rule fr = (op == RenderOp::kFillEvenOdd ? ts_fill_rule::EvenOdd : ts_fill_rule::Winding);
-//
-//        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
-//            BLPoint base(_rndCoord.nextPoint(bounds));
-//            ts_rect base_rect = { (float) base.x, (float) base.y, (float) (base.x + wh), (float) (base.y + wh)};
-//            ts_transform t = ts_transform_translate(base.x, base.y);
-//            ts_transform inv_t = ts_transform_translate(-base.x, -base.y);
-//            ts_paint paint = convert_style(base_rect, style, inv_t);
-//
-//
-//            if (op == RenderOp::kStroke) {
-//                ts_pixmap_stroke_path(pixmap, path, t, paint, stroke, toTinySkiaOperator(_params.compOp));
-//            }   else {
-//                ts_pixmap_fill_path(pixmap, path, t, paint, fr, toTinySkiaOperator(_params.compOp));
-//            }
-//
-//            ts_paint_destroy(paint);
-//        }
-//
-//        ts_path_destroy(path);
-//    }
-//
-//    ts_color TinySkiaModule::gen_color() {
-//        auto bl_color = _rndColor.nextRgba32();
-//        ts_color color = {(uint8_t) bl_color.r(), (uint8_t) bl_color.g(), (uint8_t) bl_color.b(), (uint8_t) bl_color.a()};
-//
-//        return color;
-//    }
-//
-//    inline ts_paint TinySkiaModule::convert_style(const ts_rect& rect, StyleKind style, ts_transform t) {
-//        ts_spread_mode mode;
-//
-//        float w = rect.x1 - rect.x0;
-//        float h = rect.y1 - rect.y0;
-//
-//        switch(style) {
-//            case StyleKind::kLinearReflect:
-//            case StyleKind::kRadialReflect:
-//                mode = ts_spread_mode::Reflect;
-//                break;
-//            case StyleKind::kLinearRepeat:
-//            case StyleKind::kRadialRepeat:
-//                mode = ts_spread_mode::Repeat;
-//                break;
-//            default:
-//                mode = ts_spread_mode::Pad;
-//        }
-//
-//        switch (style) {
-//            case StyleKind::kSolid: {
-//                ts_color color = gen_color();
-//
-//                ts_paint paint;
-//                paint.tag = ts_paint::Tag::Color;
-//                paint.color = ts_paint::Color_Body{ color };
-//                return paint;
-//            }
-//            case StyleKind::kLinearPad:
-//            case StyleKind::kLinearRepeat:
-//            case StyleKind::kLinearReflect: {
-//                ts_color c0 = gen_color();
-//                ts_color c1 = gen_color();
-//                ts_color c2 = gen_color();
-//
-//                float x0 = rect.x0 + w * 0.2;
-//                float y0 = rect.y0 + h * 0.2;
-//                float x1 = rect.x0 + w * 0.8;
-//                float y1 = rect.y0 + h * 0.8;
-//
-//                ts_linear_gradient *grad = ts_linear_gradient_create(x0, y0, x1, y1, mode, t);
-//
-//                ts_linear_gradient_push_stop(grad, {0.0, c0});
-//                ts_linear_gradient_push_stop(grad, {0.5, c1});
-//                ts_linear_gradient_push_stop(grad, {1.0, c2});
-//
-//                ts_paint paint;
-//                paint.tag = ts_paint::Tag::LinearGradient;
-//                paint.linear_gradient = ts_paint::LinearGradient_Body{ grad };
-//                return paint;
-//            }
-//            case StyleKind::kRadialPad:
-//            case StyleKind::kRadialRepeat:
-//            case StyleKind::kRadialReflect: {
-//                ts_color c0 = gen_color();
-//                ts_color c1 = gen_color();
-//                ts_color c2 = gen_color();
-//
-//                float x0 = rect.x0 + (w / 2);
-//                float y0 = rect.y0 + (h / 2);
-//                float r0 = (w + h) / 4;
-//                float x1 = x0 - r0 / 2.0;
-//                float y1 = y0 - r0 / 2.0;
-//
-//                ts_radial_gradient *grad = ts_radial_gradient_create(x1, y1, x0, y0, r0, mode, t);
-//
-//                ts_radial_gradient_push_stop(grad, {0.0, c0});
-//                ts_radial_gradient_push_stop(grad, {0.5, c1});
-//                ts_radial_gradient_push_stop(grad, {1.0, c2});
-//
-//                ts_paint paint;
-//                paint.tag = ts_paint::Tag::RadialGradient;
-//                paint.radial_gradient = ts_paint::RadialGradient_Body{ grad };
-//                return paint;
-//            }
-//            default: {
-//                ts_color color = gen_color();
-//
-//                ts_paint paint;
-//                paint.tag = ts_paint::Tag::Color;
-//                paint.color = ts_paint::Color_Body{ color };
-//                return paint;
-//            }
-//        }
-//    }
-//
-//    ts_rect TinySkiaModule::convert_rect(BLRect bl_rect) {
-//        return {(float) bl_rect.x, (float) bl_rect.y, (float) (bl_rect.x + bl_rect.w), (float) (bl_rect.y + bl_rect.h)};
-//    }
-//
-//    ts_point TinySkiaModule::convert_point(BLPoint point) {
-//        return { (float) point.x, (float) point.y };
-//    }
-//
-//    ts_rect TinySkiaModule::convert_rect_i(BLRectI bl_rect) {
-//        return {(float) bl_rect.x, (float) bl_rect.y, (float) (bl_rect.x + bl_rect.w), (float) (bl_rect.y + bl_rect.h)};
-//    }
-//
-//    ts_blend_mode TinySkiaModule::toTinySkiaOperator(uint32_t compOp) {
-//        switch (compOp) {
-//            case BL_COMP_OP_SRC_OVER   :
-//                return ts_blend_mode::SourceOver;
-//            case BL_COMP_OP_SRC_COPY   :
-//                return ts_blend_mode::SourceCopy;
-//            case BL_COMP_OP_DST_OVER   :
-//                return ts_blend_mode::DestinationOver;
-//            case BL_COMP_OP_SRC_IN     :
-//                return ts_blend_mode::SourceIn;
-//            case BL_COMP_OP_DST_IN     :
-//                return ts_blend_mode::DestinationIn;
-//            case BL_COMP_OP_SRC_OUT    :
-//                return ts_blend_mode::SourceOut;
-//            case BL_COMP_OP_DST_OUT    :
-//                return ts_blend_mode::DestinationOut;
-//            case BL_COMP_OP_SRC_ATOP   :
-//                return ts_blend_mode::SourceAtop;
-//            case BL_COMP_OP_DST_ATOP   :
-//                return ts_blend_mode::DestinationAtop;
-//            case BL_COMP_OP_XOR        :
-//                return ts_blend_mode::Xor;
-//            case BL_COMP_OP_PLUS       :
-//                return ts_blend_mode::Plus;
-//            case BL_COMP_OP_MULTIPLY   :
-//                return ts_blend_mode::Multiply;
-//            case BL_COMP_OP_SCREEN     :
-//                return ts_blend_mode::Screen;
-//            case BL_COMP_OP_OVERLAY    :
-//                return ts_blend_mode::Overlay;
-//            case BL_COMP_OP_DARKEN     :
-//                return ts_blend_mode::Darken;
-//            case BL_COMP_OP_LIGHTEN    :
-//                return ts_blend_mode::Lighten;
-//            case BL_COMP_OP_COLOR_DODGE:
-//                return ts_blend_mode::ColorDodge;
-//            case BL_COMP_OP_COLOR_BURN :
-//                return ts_blend_mode::ColorBurn;
-//            case BL_COMP_OP_HARD_LIGHT :
-//                return ts_blend_mode::HardLight;
-//            case BL_COMP_OP_SOFT_LIGHT :
-//                return ts_blend_mode::SoftLight;
-//            case BL_COMP_OP_DIFFERENCE :
-//                return ts_blend_mode::Difference;
-//            case BL_COMP_OP_EXCLUSION  :
-//                return ts_blend_mode::Exclusion;
-//            default:
-//                return ts_blend_mode::SourceOver;
-//        }
-//    }
-//
-//    Backend* createTinySkiaBackend() {
-//        return new TinySkiaModule();
-//    }
-//}
+
+namespace blbench {
+    struct CpuSparseModule : public Backend {
+        sp_context* context {};
+        sp_pixmap* pixmap {};
+        sp_stroke stroke;
+
+        CpuSparseModule();
+        ~CpuSparseModule() override;
+
+        bool supportsCompOp(BLCompOp compOp) const override;
+        bool supportsStyle(StyleKind style) const override;
+
+        void beforeRun() override;
+        void flush() override;
+        void afterRun() override;
+
+        void renderRectA(RenderOp op) override;
+        void renderRectF(RenderOp op) override;
+        void renderRectRotated(RenderOp op) override;
+        void renderRoundF(RenderOp op) override;
+        void renderRoundRotated(RenderOp op) override;
+        void renderPolygon(RenderOp op, uint32_t complexity) override;
+        void renderShape(RenderOp op, ShapeData shape) override;
+
+        inline sp_paint convert_style(const sp_rect& rect, StyleKind style, sp_transform t);
+        sp_color gen_color();
+        sp_rect convert_rect(BLRect rect);
+        sp_rect convert_rect_i(BLRectI rect);
+        sp_point convert_point(BLPoint rect);
+    };
+
+    CpuSparseModule::CpuSparseModule() {
+        strcpy(_name, "cpu-sparse");
+    }
+
+    CpuSparseModule::~CpuSparseModule() {}
+
+    bool CpuSparseModule::supportsCompOp(BLCompOp compOp) const {
+        return compOp == BL_COMP_OP_SRC_OVER;
+    }
+
+    bool CpuSparseModule::supportsStyle(StyleKind style) const {
+        return style <= StyleKind::kSolid;
+    }
+
+    void CpuSparseModule::beforeRun() {
+        int w = int(_params.screenW);
+        int h = int(_params.screenH);
+
+        pixmap = sp_pixmap_create(w, h);
+        context = sp_context_create(w, h);
+        stroke = sp_stroke { _params.strokeWidth };
+    }
+
+    void CpuSparseModule::afterRun() {
+        int w = int(_params.screenW);
+        int h = int(_params.screenH);
+
+        BLImageData dstData;
+        _surface.create(int(w), int(h), BL_FORMAT_PRGB32);
+        _surface.makeMutable(&dstData);
+
+        auto data = sp_data(pixmap);
+        auto bytes = sp_argb_data(data);
+
+        memcpy(
+                static_cast<uint8_t*>(dstData.pixelData),
+                bytes,
+                w * h * 4);
+        sp_argb_destroy(data);
+        sp_pixmap_destroy(pixmap);
+        sp_context_destroy(context);
+    }
+
+    void CpuSparseModule::flush() {
+
+    }
+
+    void CpuSparseModule::renderRectA(RenderOp op) {
+        sp_transform t = sp_transform_identity();
+        BLSizeI bounds(_params.screenW, _params.screenH);
+        StyleKind style = _params.style;
+        int wh = _params.shapeSize;
+
+        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
+            sp_rect rect = convert_rect_i(_rndCoord.nextRectI(bounds, wh, wh));
+            sp_paint paint = convert_style(rect, style, t);
+
+            if (op == RenderOp::kStroke) {
+                sp_stroke_rect(context, rect, paint, stroke);
+            }   else {
+                sp_fill_rect(context, rect, paint);
+            }
+        }
+
+        sp_render_to_pixmap(pixmap, context);
+    }
+
+    void CpuSparseModule::renderRectF(RenderOp op) {
+        sp_transform t = sp_transform_identity();
+        BLSizeI bounds(_params.screenW, _params.screenH);
+        StyleKind style = _params.style;
+        int wh = _params.shapeSize;
+
+        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
+            sp_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
+            sp_paint paint = convert_style(rect, style, t);
+
+            if (op == RenderOp::kStroke) {
+                sp_stroke_rect(context, rect, paint, stroke);
+            }   else {
+                sp_fill_rect(context, rect, paint);
+            }
+        }
+
+        sp_render_to_pixmap(pixmap, context);
+    }
+
+    void CpuSparseModule::renderRectRotated(RenderOp op) {
+        BLSize bounds(_params.screenW, _params.screenH);
+        StyleKind style = _params.style;
+        sp_transform id = sp_transform_identity();
+
+        double cx = double(_params.screenW) * 0.5;
+        double cy = double(_params.screenH) * 0.5;
+        double wh = _params.shapeSize;
+        double angle = 0.0;
+
+        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++, angle += 0.01) {
+            sp_transform t = sp_transform_rotate_at(angle, cx, cy);
+            sp_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
+            sp_paint paint = convert_style(rect, style, id);
+
+            sp_set_transform(context, t);
+
+            if (op == RenderOp::kStroke) {
+                sp_stroke_rect(context, rect, paint, stroke);
+            }   else {
+                sp_fill_rect(context, rect, paint);
+            }
+
+        }
+
+        sp_render_to_pixmap(pixmap, context);
+    }
+
+    void CpuSparseModule::renderRoundF(RenderOp op) {
+        BLSize bounds(_params.screenW, _params.screenH);
+        StyleKind style = _params.style;
+        sp_transform t = sp_transform_identity();
+        double wh = _params.shapeSize;
+
+        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
+            double radius = _rndExtra.nextDouble(4.0, 40.0);
+            sp_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
+            sp_paint paint = convert_style(rect, style, t);
+
+            sp_path *p = sp_rounded_rect(rect, radius);
+
+            if (op == RenderOp::kStroke) {
+                sp_stroke_path(context, p, paint, stroke);
+            }   else {
+                sp_fill_path(context, p, paint, sp_fill_rule::Winding);
+            }
+
+            sp_path_destroy(p);
+        }
+
+        sp_render_to_pixmap(pixmap, context);
+    }
+
+    void CpuSparseModule::renderRoundRotated(RenderOp op) {
+        BLSize bounds(_params.screenW, _params.screenH);
+        StyleKind style = _params.style;
+        sp_transform t = sp_transform_identity();
+
+        double cx = double(_params.screenW) * 0.5;
+        double cy = double(_params.screenH) * 0.5;
+        double wh = _params.shapeSize;
+        double angle = 0.0;
+
+        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++, angle += 0.01) {
+            sp_transform t = sp_transform_rotate_at(angle, cx, cy);
+            double radius = _rndExtra.nextDouble(4.0, 40.0);
+            sp_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
+            sp_paint paint = convert_style(rect, style, t);
+
+            sp_path *p = sp_rounded_rect(rect, radius);
+
+            sp_set_transform(context, t);
+
+            if (op == RenderOp::kStroke) {
+                sp_stroke_path(context, p, paint, stroke);
+            }   else {
+                sp_fill_path(context, p, paint, sp_fill_rule::Winding);
+            }
+
+            sp_path_destroy(p);
+        }
+
+        sp_render_to_pixmap(pixmap, context);
+    }
+
+    void CpuSparseModule::renderPolygon(RenderOp op, uint32_t complexity) {
+        BLSizeI bounds(_params.screenW - _params.shapeSize,
+                       _params.screenH - _params.shapeSize);
+        sp_transform t = sp_transform_identity();
+        float wh = (float) _params.shapeSize;
+        StyleKind style = _params.style;
+
+        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
+            sp_point base = convert_point(_rndCoord.nextPoint(bounds));
+            sp_rect base_rect = {base.x, base.y, base.x + wh, base.y + wh};
+            sp_paint paint = convert_style(base_rect, style, t);
+
+            double x = _rndCoord.nextDouble(base.x, base.x + wh);
+            double y = _rndCoord.nextDouble(base.y, base.y + wh);
+
+            printf("\n\nSTART\n");
+            printf("path.move_to(%f, %f);\n", x, y);
+
+            sp_path *path = sp_path_create();
+            sp_move_to(path, sp_point {x, y});
+            for (uint32_t p = 1; p < complexity; p++) {
+                x = _rndCoord.nextDouble(base.x, base.x + wh);
+                y = _rndCoord.nextDouble(base.y, base.y + wh);
+                printf("path.line_to(%f, %f);\n", x, y);
+                sp_line_to(path, sp_point {x, y});
+            }
+
+            sp_close(path);
+
+            sp_fill_rule fr = (op == RenderOp::kFillEvenOdd ? sp_fill_rule::EvenOdd : sp_fill_rule::Winding);
+
+            if (op == RenderOp::kStroke) {
+                sp_stroke_path(context, path, paint, stroke);
+            }   else {
+                sp_fill_path(context, path, paint, fr);
+            }
+
+            sp_path_destroy(path);
+        }
+
+        sp_render_to_pixmap(pixmap, context);
+    }
+
+    void CpuSparseModule::renderShape(RenderOp op, ShapeData shape) {
+        BLSizeI bounds(_params.screenW - _params.shapeSize, _params.screenH - _params.shapeSize);
+        StyleKind style = _params.style;
+        double wh = double(_params.shapeSize);
+
+        sp_path *path = sp_path_create();
+        ShapeIterator it(shape);
+
+        while (it.hasCommand()) {
+            if (it.isMoveTo()) {
+                sp_move_to(path, sp_point { it.x(0) * wh, it.y(0) * wh });
+            }
+            else if (it.isLineTo()) {
+                sp_line_to(path, sp_point { it.x(0) * wh, it.y(0) * wh });
+            }
+            else if (it.isQuadTo()) {
+                sp_quad_to(path, sp_point { it.x(0) * wh, it.y(0) * wh },
+                           sp_point { it.x(1) * wh, it.y(1) * wh });
+            }
+            else if (it.isCubicTo()) {
+                sp_cubic_to(path, sp_point { it.x(0) * wh, it.y(0) * wh },
+                            sp_point { it.x(1) * wh, it.y(1) * wh },
+                            sp_point { it.x(2) * wh, it.y(2) * wh });
+            }
+            else {
+                sp_close(path);
+            }
+
+            it.next();
+        }
+
+        sp_fill_rule fr = (op == RenderOp::kFillEvenOdd ? sp_fill_rule::EvenOdd : sp_fill_rule::Winding);
+
+        for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
+            BLPoint base(_rndCoord.nextPoint(bounds));
+            sp_rect base_rect = { (float) base.x, (float) base.y, (float) (base.x + wh), (float) (base.y + wh)};
+            sp_transform t = sp_transform_translate(base.x, base.y);
+            sp_transform inv_t = sp_transform_translate(-base.x, -base.y);
+            sp_paint paint = convert_style(base_rect, style, inv_t);
+
+            sp_set_transform(context, t);
+
+            if (op == RenderOp::kStroke) {
+                sp_stroke_path(context, path, paint, stroke);
+            }   else {
+                sp_fill_path(context, path, paint, fr);
+            }
+
+//            sp_paint_destroy(paint);
+        }
+
+        sp_path_destroy(path);
+
+        sp_render_to_pixmap(pixmap, context);
+    }
+
+    sp_color CpuSparseModule::gen_color() {
+        auto bl_color = _rndColor.nextRgba32();
+        sp_color color = {(uint8_t) bl_color.r(), (uint8_t) bl_color.g(), (uint8_t) bl_color.b(), (uint8_t) bl_color.a()};
+
+        return color;
+    }
+
+    inline sp_paint CpuSparseModule::convert_style(const sp_rect& rect, StyleKind style, sp_transform t) {
+//        double w = rect.x1 - rect.x0;
+//        double h = rect.y1 - rect.y0;
+
+        sp_color color = gen_color();
+
+        sp_paint paint;
+        paint.tag = sp_paint::Tag::Color;
+        paint.color = sp_paint::Color_Body{ color };
+        return paint;
+    }
+
+    sp_rect CpuSparseModule::convert_rect(BLRect bl_rect) {
+        return {bl_rect.x, bl_rect.y, (bl_rect.x + bl_rect.w),  (bl_rect.y + bl_rect.h)};
+    }
+
+    sp_point CpuSparseModule::convert_point(BLPoint point) {
+        return { point.x, point.y };
+    }
+
+    sp_rect CpuSparseModule::convert_rect_i(BLRectI bl_rect) {
+        return {(float) bl_rect.x, (float) bl_rect.y, (float) (bl_rect.x + bl_rect.w), (float) (bl_rect.y + bl_rect.h)};
+    }
+
+    Backend* createCpuSparseBackend() {
+        return new CpuSparseModule();
+    }
+}
 
