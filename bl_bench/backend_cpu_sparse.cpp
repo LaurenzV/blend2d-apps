@@ -218,15 +218,11 @@ namespace blbench {
             double x = _rndCoord.nextDouble(base.x, base.x + wh);
             double y = _rndCoord.nextDouble(base.y, base.y + wh);
 
-            printf("\n\nSTART\n");
-            printf("path.move_to(%f, %f);\n", x, y);
-
             sp_path *path = sp_path_create();
             sp_move_to(path, sp_point {x, y});
             for (uint32_t p = 1; p < complexity; p++) {
                 x = _rndCoord.nextDouble(base.x, base.x + wh);
                 y = _rndCoord.nextDouble(base.y, base.y + wh);
-                printf("path.line_to(%f, %f);\n", x, y);
                 sp_line_to(path, sp_point {x, y});
             }
 
