@@ -28,8 +28,9 @@ enum class BackendKind : uint32_t {
   kJUCE,
   kCoreGraphics,
   kTinySkia,
+  kCpuSparse,
 
-  kMaxValue = kTinySkia
+  kMaxValue = kCpuSparse
 };
 
 enum class TestKind : uint32_t {

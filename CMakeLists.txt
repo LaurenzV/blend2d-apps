@@ -16,6 +16,7 @@ include(FindPkgConfig)
 
 set(BLEND2D_APPS_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "blend2d-apps directory")
 set(unofficial-skia_DIR "/Users/lstampfl/vcpkg/packages/skia_arm64-osx/share/unofficial-skia")
+set(JUCE_DIR "/Users/lstampfl/Programming/GitHub/JUCE")
 
 # Dependencies - Blend2D (Requred)
 # ================================
@@ -205,6 +206,13 @@ set(DEPENDENCY_TINY_SKIA_DEFINITIONS BLEND2D_APPS_ENABLE_TINY_SKIA)
 set(DEPENDENCY_TINY_SKIA_INCLUDE_DIRS "/Users/lstampfl/Programming/Playground/tiny_skia_c")
 set(DEPENDENCY_TINY_SKIA_DIR "/Users/lstampfl/Programming/Playground/tiny_skia_c/target/release")
 
+# cpu-sparse
+message("-- [blend2d-apps] adding support for cpu-sparse")
+set(DEPENDENCY_CPU_SPARSE_LIBRARIES c_api)
+set(DEPENDENCY_CPU_SPARSE_DEFINITIONS BLEND2D_APPS_ENABLE_CPU_SPARSE)
+set(DEPENDENCY_CPU_SPARSE_INCLUDE_DIRS "/Users/lstampfl/Programming/GitHub/cpu-sparse-experiments/crates/c_api")
+set(DEPENDENCY_CPU_SPARSE_DIR "/Users/lstampfl/Programming/GitHub/cpu-sparse-experiments/target/release")
+
 # Dependencies - Cairo (Optional)
 # ===============================
 
@@ -282,6 +290,8 @@ set(BLEND2D_BENCH_SRC
   bl_bench/backend_skia.h
   bl_bench/backend_tiny_skia.h
   bl_bench/backend_tiny_skia.cpp
+  bl_bench/backend_cpu_sparse.h
+  bl_bench/backend_cpu_sparse.cpp
   bl_bench/shape_data.cpp
   bl_bench/shape_data.h
 )
@@ -294,6 +304,7 @@ target_include_directories(bl_bench PRIVATE
   ${DEPENDENCY_CAIRO_INCLUDE_DIRS}
   /Users/lstampfl/vcpkg/packages/skia_arm64-osx/include
   ${DEPENDENCY_TINY_SKIA_INCLUDE_DIRS}
+  ${DEPENDENCY_CPU_SPARSE_INCLUDE_DIRS}
 )
 target_compile_definitions(bl_bench PRIVATE
   ${DEPENDENCY_AGG_DEFINITIONS}
@@ -301,6 +312,7 @@ target_compile_definitions(bl_bench PRIVATE
   ${DEPENDENCY_QT_DEFINITIONS}
   ${DEPENDENCY_SKIA_DEFINITIONS}
   ${DEPENDENCY_TINY_SKIA_DEFINITIONS}
+  ${DEPENDENCY_CPU_SPARSE_DEFINITIONS}
   ${DEPENDENCY_CG_DEFINITIONS}
   ${DEPENDENCY_JUCE_DEFINITIONS})
 target_link_libraries(bl_bench blend2d::blend2d
@@ -311,8 +323,9 @@ target_link_libraries(bl_bench blend2d::blend2d
   ${DEPENDENCY_CG_LIBRARIES}
   ${DEPENDENCY_JUCE_LIBRARIES}
   ${DEPENDENCY_TINY_SKIA_LIBRARIES}
+  ${DEPENDENCY_CPU_SPARSE_LIBRARIES}
 )
-target_link_directories(bl_bench PRIVATE ${DEPENDENCY_CAIRO_LIBRARY_DIRS} ${DEPENDENCY_TINY_SKIA_DIR})
+target_link_directories(bl_bench PRIVATE ${DEPENDENCY_CAIRO_LIBRARY_DIRS} ${DEPENDENCY_TINY_SKIA_DIR} ${DEPENDENCY_CPU_SPARSE_DIR})
 
 # Blend2D-Apps - Blend2D Qt Demos
 # ===============================

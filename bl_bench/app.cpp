@@ -15,6 +15,7 @@
 #include "images_data.h"
 #include "backend_blend2d.h"
 #include "backend_tiny_skia.h"
+#include "backend_cpu_sparse.h"
 
 #if defined(BLEND2D_APPS_ENABLE_AGG)
   #include "backend_agg.h"
@@ -45,26 +46,29 @@
 namespace blbench {
 
 static constexpr uint32_t kSupportedBackends =
-//#if defined(BLEND2D_APPS_ENABLE_AGG)
-//  (1u << uint32_t(BackendKind::kAGG)) |
-//#endif
-//#if defined(BLEND2D_APPS_ENABLE_CAIRO)
-//  (1u << uint32_t(BackendKind::kCairo)) |
-//#endif
-//#if defined(BLEND2D_APPS_ENABLE_QT)
-//  (1u << uint32_t(BackendKind::kQt)) |
-//#endif
-//#if defined(BLEND2D_APPS_ENABLE_SKIA)
-//  (1u << uint32_t(BackendKind::kSkia)) |
-//#endif
-//#if defined(BLEND2D_APPS_ENABLE_JUCE)
-//  (1u << uint32_t(BackendKind::kJUCE)) |
-//#endif
-//#if defined(BLEND2D_APPS_ENABLE_COREGRAPHICS)
-//  (1u << uint32_t(BackendKind::kCoreGraphics)) |
-//#endif
+#if defined(BLEND2D_APPS_ENABLE_AGG)
+  (1u << uint32_t(BackendKind::kAGG)) |
+#endif
+#if defined(BLEND2D_APPS_ENABLE_CAIRO)
+  (1u << uint32_t(BackendKind::kCairo)) |
+#endif
+#if defined(BLEND2D_APPS_ENABLE_QT)
+  (1u << uint32_t(BackendKind::kQt)) |
+#endif
+#if defined(BLEND2D_APPS_ENABLE_SKIA)
+  (1u << uint32_t(BackendKind::kSkia)) |
+#endif
+#if defined(BLEND2D_APPS_ENABLE_JUCE)
+  (1u << uint32_t(BackendKind::kJUCE)) |
+#endif
+#if defined(BLEND2D_APPS_ENABLE_COREGRAPHICS)
+  (1u << uint32_t(BackendKind::kCoreGraphics)) |
+#endif
 #if defined(BLEND2D_APPS_ENABLE_TINY_SKIA)
   (1u << uint32_t(BackendKind::kTinySkia)) |
+#endif
+#if defined(BLEND2D_APPS_ENABLE_CPU_SPARSE)
+(1u << uint32_t(BackendKind::kCpuSparse)) |
 #endif
   (1u << uint32_t(BackendKind::kBlend2D));
 
