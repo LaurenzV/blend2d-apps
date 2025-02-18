@@ -87,11 +87,13 @@ namespace blbench {
         for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
             sp_rect rect = convert_rect_i(_rndCoord.nextRectI(bounds, wh, wh));
             sp_paint paint = convert_style(rect, style, t);
+            sp_set_paint(context, paint);
 
             if (op == RenderOp::kStroke) {
-                sp_stroke_rect(context, rect, paint, stroke);
+                sp_set_stroke(context, stroke);
+                sp_stroke_rect(context, rect);
             }   else {
-                sp_fill_rect(context, rect, paint);
+                sp_fill_rect(context, rect);
             }
         }
 
@@ -107,11 +109,13 @@ namespace blbench {
         for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
             sp_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
             sp_paint paint = convert_style(rect, style, t);
+            sp_set_paint(context, paint);
 
             if (op == RenderOp::kStroke) {
-                sp_stroke_rect(context, rect, paint, stroke);
+                sp_set_stroke(context, stroke);
+                sp_stroke_rect(context, rect);
             }   else {
-                sp_fill_rect(context, rect, paint);
+                sp_fill_rect(context, rect);
             }
         }
 
@@ -133,12 +137,14 @@ namespace blbench {
             sp_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
             sp_paint paint = convert_style(rect, style, id);
 
+            sp_set_paint(context, paint);
             sp_set_transform(context, t);
 
             if (op == RenderOp::kStroke) {
-                sp_stroke_rect(context, rect, paint, stroke);
+                sp_set_stroke(context, stroke);
+                sp_stroke_rect(context, rect);
             }   else {
-                sp_fill_rect(context, rect, paint);
+                sp_fill_rect(context, rect);
             }
 
         }
@@ -158,11 +164,13 @@ namespace blbench {
             sp_paint paint = convert_style(rect, style, t);
 
             sp_path *p = sp_rounded_rect(rect, radius);
+            sp_set_paint(context, paint);
 
             if (op == RenderOp::kStroke) {
-                sp_stroke_path(context, p, paint, stroke);
+                sp_set_stroke(context, stroke);
+                sp_stroke_path(context, p);
             }   else {
-                sp_fill_path(context, p, paint, sp_fill_rule::Winding);
+                sp_fill_path(context, p);
             }
 
             sp_path_destroy(p);
@@ -174,7 +182,6 @@ namespace blbench {
     void CpuSparseModule::renderRoundRotated(RenderOp op) {
         BLSize bounds(_params.screenW, _params.screenH);
         StyleKind style = _params.style;
-        sp_transform t = sp_transform_identity();
 
         double cx = double(_params.screenW) * 0.5;
         double cy = double(_params.screenH) * 0.5;
@@ -190,11 +197,13 @@ namespace blbench {
             sp_path *p = sp_rounded_rect(rect, radius);
 
             sp_set_transform(context, t);
+            sp_set_paint(context, paint);
 
             if (op == RenderOp::kStroke) {
-                sp_stroke_path(context, p, paint, stroke);
+                sp_set_stroke(context, stroke);
+                sp_stroke_path(context, p);
             }   else {
-                sp_fill_path(context, p, paint, sp_fill_rule::Winding);
+                sp_fill_path(context, p);
             }
 
             sp_path_destroy(p);
@@ -230,10 +239,14 @@ namespace blbench {
 
             sp_fill_rule fr = (op == RenderOp::kFillEvenOdd ? sp_fill_rule::EvenOdd : sp_fill_rule::Winding);
 
+            sp_set_paint(context, paint);
+            sp_set_fill_rule(context, fr);
+
             if (op == RenderOp::kStroke) {
-                sp_stroke_path(context, path, paint, stroke);
+                sp_set_stroke(context, stroke);
+                sp_stroke_path(context, path);
             }   else {
-                sp_fill_path(context, path, paint, fr);
+                sp_fill_path(context, path);
             }
 
             sp_path_destroy(path);
@@ -283,14 +296,15 @@ namespace blbench {
             sp_paint paint = convert_style(base_rect, style, inv_t);
 
             sp_set_transform(context, t);
+            sp_set_paint(context, paint);
+            sp_set_fill_rule(context, fr);
 
             if (op == RenderOp::kStroke) {
-                sp_stroke_path(context, path, paint, stroke);
+                sp_set_stroke(context, stroke);
+                sp_stroke_path(context, path);
             }   else {
-                sp_fill_path(context, path, paint, fr);
+                sp_fill_path(context, path);
             }
-
-//            sp_paint_destroy(paint);
         }
 
         sp_path_destroy(path);

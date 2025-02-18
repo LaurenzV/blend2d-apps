@@ -210,8 +210,8 @@ set(DEPENDENCY_TINY_SKIA_DIR "/Users/lstampfl/Programming/Playground/tiny_skia_c
 message("-- [blend2d-apps] adding support for cpu-sparse")
 set(DEPENDENCY_CPU_SPARSE_LIBRARIES c_api)
 set(DEPENDENCY_CPU_SPARSE_DEFINITIONS BLEND2D_APPS_ENABLE_CPU_SPARSE)
-set(DEPENDENCY_CPU_SPARSE_INCLUDE_DIRS "/Users/lstampfl/Programming/GitHub/cpu-sparse-experiments/crates/c_api")
-set(DEPENDENCY_CPU_SPARSE_DIR "/Users/lstampfl/Programming/GitHub/cpu-sparse-experiments/target/release")
+set(DEPENDENCY_CPU_SPARSE_INCLUDE_DIRS "/Users/lstampfl/Programming/GitHub/cpu_sparse/crates/c_api")
+set(DEPENDENCY_CPU_SPARSE_DIR "/Users/lstampfl/Programming/GitHub/cpu_sparse/target/release")
 
 # Dependencies - Cairo (Optional)
 # ===============================
