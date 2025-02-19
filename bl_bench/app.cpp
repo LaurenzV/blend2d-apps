@@ -55,9 +55,9 @@ static constexpr uint32_t kSupportedBackends =
 // #if defined(BLEND2D_APPS_ENABLE_QT)
 //   (1u << uint32_t(BackendKind::kQt)) |
 // #endif
-#if defined(BLEND2D_APPS_ENABLE_SKIA)
-  (1u << uint32_t(BackendKind::kSkia)) |
-#endif
+// #if defined(BLEND2D_APPS_ENABLE_SKIA)
+//   (1u << uint32_t(BackendKind::kSkia)) |
+// #endif
 #if defined(BLEND2D_APPS_ENABLE_JUCE)
   (1u << uint32_t(BackendKind::kJUCE)) |
 #endif

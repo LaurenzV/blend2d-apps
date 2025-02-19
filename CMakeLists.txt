@@ -15,8 +15,12 @@ project(blend2d-apps C CXX)
 include(FindPkgConfig)
 
 set(BLEND2D_APPS_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "blend2d-apps directory")
+IF(WIN32)
+set(unofficial-skia_DIR C:\\Users\\lstam\\Documents\\Programming\\vcpkg\\packages\\skia_x64-windows\\share\\unofficial-skia)
+ELSE()
 set(unofficial-skia_DIR "/Users/lstampfl/vcpkg/packages/skia_arm64-osx/share/unofficial-skia")
 set(JUCE_DIR "/Users/lstampfl/Programming/GitHub/JUCE")
+ENDIF()
 
 # Dependencies - Blend2D (Requred)
 # ================================
@@ -203,15 +207,25 @@ set(DEPENDENCY_AGG_LIBRARIES "")
 message("-- [blend2d-apps] adding support for tiny-skia")
 set(DEPENDENCY_TINY_SKIA_LIBRARIES tiny_skia_c)
 set(DEPENDENCY_TINY_SKIA_DEFINITIONS BLEND2D_APPS_ENABLE_TINY_SKIA)
+IF (WIN32)
+set(DEPENDENCY_TINY_SKIA_INCLUDE_DIRS "C:\\Users\\lstam\\Documents\\Programming\\tiny_skia_c")
+set(DEPENDENCY_TINY_SKIA_DIR "C:\\Users\\lstam\\Documents\\Programming\\tiny_skia_c\\target\\release")
+ELSE ()
 set(DEPENDENCY_TINY_SKIA_INCLUDE_DIRS "/Users/lstampfl/Programming/Playground/tiny_skia_c")
 set(DEPENDENCY_TINY_SKIA_DIR "/Users/lstampfl/Programming/Playground/tiny_skia_c/target/release")
+ENDIF()
 
 # cpu-sparse
 message("-- [blend2d-apps] adding support for cpu-sparse")
 set(DEPENDENCY_CPU_SPARSE_LIBRARIES c_api)
 set(DEPENDENCY_CPU_SPARSE_DEFINITIONS BLEND2D_APPS_ENABLE_CPU_SPARSE)
-set(DEPENDENCY_CPU_SPARSE_INCLUDE_DIRS "/Users/lstampfl/Programming/GitHub/cpu_sparse/crates/c_api")
-set(DEPENDENCY_CPU_SPARSE_DIR "/Users/lstampfl/Programming/GitHub/cpu_sparse/target/release")
+IF (WIN32)
+  set(DEPENDENCY_CPU_SPARSE_INCLUDE_DIRS "C:\\Users\\lstam\\Documents\\Programming\\cpu-sparse-experiments\\crates\\c_api")
+  set(DEPENDENCY_CPU_SPARSE_DIR "C:\\Users\\lstam\\Documents\\Programming\\cpu-sparse-experiments\\target\\release")
+ELSE ()
+  set(DEPENDENCY_CPU_SPARSE_INCLUDE_DIRS "/Users/lstampfl/Programming/GitHub/cpu_sparse/crates/c_api")
+  set(DEPENDENCY_CPU_SPARSE_DIR "/Users/lstampfl/Programming/GitHub/cpu_sparse/target/release")
+ENDIF()
 
 # Dependencies - Cairo (Optional)
 # ===============================
@@ -299,10 +313,17 @@ set(BLEND2D_BENCH_SRC
 add_executable(bl_bench ${BLEND2D_BENCH_SRC} ${ANTIGRAIN_SRC})
 target_compile_features(bl_bench PUBLIC cxx_std_11)
 set_property(TARGET bl_bench PROPERTY CXX_VISIBILITY_PRESET hidden)
+
+
+IF(WIN32)
+  target_include_directories(bl_bench PRIVATE C:\\Users\\lstam\\Documents\\Programming\\vcpkg\\packages\\skia_x64-windows\\include)
+ELSE()
+  target_include_directories(bl_bench PRIVATE /Users/lstampfl/vcpkg/packages/skia_arm64-osx/include)
+ENDIF()
+
 target_include_directories(bl_bench PRIVATE
   ${DEPENDENCY_AGG_INCLUDE_DIRS}
   ${DEPENDENCY_CAIRO_INCLUDE_DIRS}
-  /Users/lstampfl/vcpkg/packages/skia_arm64-osx/include
   ${DEPENDENCY_TINY_SKIA_INCLUDE_DIRS}
   ${DEPENDENCY_CPU_SPARSE_INCLUDE_DIRS}
 )
@@ -315,7 +336,7 @@ target_compile_definitions(bl_bench PRIVATE
   ${DEPENDENCY_CPU_SPARSE_DEFINITIONS}
   ${DEPENDENCY_CG_DEFINITIONS}
   ${DEPENDENCY_JUCE_DEFINITIONS})
-target_link_libraries(bl_bench blend2d::blend2d
+target_link_libraries(bl_bench blend2d::blend2d ntdll
   ${DEPENDENCY_AGG_LIBRARUES}
   ${DEPENDENCY_CAIRO_LIBRARIES}
   ${DEPENDENCY_QT_LIBRARIES}
