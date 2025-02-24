@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <limits>
+#include <fstream>
 #include <type_traits>
 #include <tuple>
 
@@ -746,7 +747,13 @@ int BenchApp::run() {
   json.nl();
 
   printf("\n");
-  fputs(jsonContent.data(), stdout);
+  std::ofstream outFile("../../out.json", std::ofstream::trunc);
+  if (outFile.is_open()) {
+    outFile << jsonContent.data();
+    outFile.close();
+  } else {
+    fprintf(stderr, "Failed to open out.json for writing\n");
+  }
 
   return 0;
 }
