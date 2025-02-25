@@ -16,7 +16,7 @@ include(FindPkgConfig)
 
 set(BLEND2D_APPS_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "blend2d-apps directory")
 IF(WIN32)
-set(unofficial-skia_DIR C:\\Users\\lstam\\Documents\\Programming\\vcpkg\\packages\\skia_x64-windows\\share\\unofficial-skia)
+set(unofficial-skia_DIR C:\\Users\\lstam\\Documents\\Programming\\vcpkg\\packages\\skia_x64-win-llvm\\share\\unofficial-skia)
 ELSE()
 set(unofficial-skia_DIR "/Users/lstampfl/vcpkg/packages/skia_arm64-osx/share/unofficial-skia")
 set(JUCE_DIR "/Users/lstampfl/Programming/GitHub/JUCE")
@@ -316,7 +316,7 @@ set_property(TARGET bl_bench PROPERTY CXX_VISIBILITY_PRESET hidden)
 
 
 IF(WIN32)
-  target_include_directories(bl_bench PRIVATE C:\\Users\\lstam\\Documents\\Programming\\vcpkg\\packages\\skia_x64-windows\\include)
+  target_include_directories(bl_bench PRIVATE C:\\Users\\lstam\\Documents\\Programming\\vcpkg\\packages\\skia_x64-win-llvm\\include)
 ELSE()
   target_include_directories(bl_bench PRIVATE /Users/lstampfl/vcpkg/packages/skia_arm64-osx/include)
 ENDIF()
