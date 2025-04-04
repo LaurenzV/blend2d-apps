@@ -608,13 +608,22 @@ void BenchApp::serializeOptions(JSONBuilder& json, const BenchParams& params) co
 }
 
 int BenchApp::run() {
-  BLImage img(480, 480, BL_FORMAT_PRGB32);
+  BLImage img(20, 20, BL_FORMAT_PRGB32);
   BLContext ctx(img);
 
-  for (int i = 0; i < 1000000; i++) {
-    // Fill a path with opaque white - 0xAARRGGBB.
-    ctx.fillRect(BLRect(50.0, 50.0, 100.0, 100.0), BLRgba32(0xAAAAAAAA));
-  }
+    ctx.fillRect(BLRectI(0, 0, 20, 20), BLRgba32(0xFFFFFFFF));
+
+  BLMatrix2D mat = BLMatrix2D::makeTranslation(0.0, 0.0);
+  
+  BLImage texture;
+  texture.readFromFile("/Users/lstampfl/Programming/GitHub/blend2d-apps/cmake-build-release/rgb_image_2x2.png");
+  BLPattern pattern(texture);
+  pattern.setTransform(mat);
+
+  BLRectI srcRect(0, 0, 10, 10);
+
+  ctx.setTransform(BLMatrix2D::makeScaling(1.0));
+  ctx.fillRect(srcRect, pattern);
   ctx.end();
 
   img.writeToFile("bl_sample_5.png");
