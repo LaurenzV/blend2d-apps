@@ -27,8 +27,9 @@ enum class BackendKind : uint32_t {
   kSkia,
   kJUCE,
   kCoreGraphics,
+  kTinySkia,
 
-  kMaxValue = kCoreGraphics
+  kMaxValue = kTinySkia
 };
 
 enum class TestKind : uint32_t {

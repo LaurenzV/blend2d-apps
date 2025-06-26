@@ -32,6 +32,10 @@
   #include "backend_skia.h"
 #endif // BLEND2D_APPS_ENABLE_SKIA
 
+#if defined(BLEND2D_APPS_ENABLE_TINY_SKIA)
+  #include "backend_tiny_skia.h"
+#endif // BLEND2D_APPS_ENABLE_SKIA
+
 #if defined(BLEND2D_APPS_ENABLE_COREGRAPHICS)
   #include "backend_coregraphics.h"
 #endif // BLEND2D_APPS_ENABLE_COREGRAPHICS
@@ -63,6 +67,9 @@ static constexpr uint32_t kSupportedBackends =
 #if defined(BLEND2D_APPS_ENABLE_COREGRAPHICS)
   (1u << uint32_t(BackendKind::kCoreGraphics)) |
 #endif
+#if defined(BLEND2D_APPS_ENABLE_TINY_SKIA)
+(1u << uint32_t(BackendKind::kTinySkia)) |
+#endif
   (1u << uint32_t(BackendKind::kBlend2D));
 
 static const char* backendKindNameList[] = {
@@ -72,7 +79,8 @@ static const char* backendKindNameList[] = {
   "Qt",
   "Skia",
   "JUCE",
-  "CoreGraphics"
+  "CoreGraphics",
+  "TinySkia"
 };
 
 static const char* testKindNameList[] = {
@@ -680,6 +688,14 @@ int BenchApp::run() {
     }
 #endif
 
+#if defined(BLEND2D_APPS_ENABLE_TINY_SKIA)
+    if (isBackendEnabled(BackendKind::kTinySkia)) {
+      Backend* backend = createTinySkiaBackend();
+      runBackendTests(*backend, params, json);
+      delete backend;
+    }
+#endif
+    
 #if defined(BLEND2D_APPS_ENABLE_CAIRO)
     if (isBackendEnabled(BackendKind::kCairo)) {
       Backend* backend = createCairoBackend();
