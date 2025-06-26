@@ -253,9 +253,7 @@ endif()
 # ============================
 
 if(Qt6Gui_FOUND)
-  message("-- [blend2d-apps] adding support for Qt6")
-  set(DEPENDENCY_QT_LIBRARIES Qt6::Gui Qt6::Widgets)
-  set(DEPENDENCY_QT_DEFINITIONS BLEND2D_APPS_ENABLE_QT)
+  message("-- [blend2d-apps] support for Qt6 has been explicitly disabled")
 endif()
 
 # Dependencies - CoreGraphics (Apple Only)
