@@ -653,13 +653,14 @@ int BenchApp::run() {
       runBackendTests(*backend, params, json);
       delete backend;
 
-      backend = createBlend2DBackend(2);
-      runBackendTests(*backend, params, json);
-      delete backend;
-
-      backend = createBlend2DBackend(4);
-      runBackendTests(*backend, params, json);
-      delete backend;
+      // TODO: Re-enable
+      // backend = createBlend2DBackend(2);
+      // runBackendTests(*backend, params, json);
+      // delete backend;
+      //
+      // backend = createBlend2DBackend(4);
+      // runBackendTests(*backend, params, json);
+      // delete backend;
     }
 
 #if defined(BLEND2D_APPS_ENABLE_AGG)
@@ -716,7 +717,17 @@ int BenchApp::run() {
   json.nl();
 
   printf("\n");
-  fputs(jsonContent.data(), stdout);
+  
+  // Save JSON to file
+  FILE* file = fopen("results.json", "w");
+  if (file) {
+    fputs(jsonContent.data(), file);
+    fclose(file);
+    printf("Results saved to results.json\n");
+  } else {
+    printf("Error: Could not open results.json for writing\n");
+    return 1;
+  }
 
   return 0;
 }
