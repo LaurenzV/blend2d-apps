@@ -7,6 +7,7 @@ namespace blbench {
     struct TinySkiaModule : public Backend {
         ts_pixmap* pixmap {};
         ts_stroke stroke;
+        ts_pixmap* sprite_pixmaps[kBenchNumSprites] {};
 
         TinySkiaModule();
         ~TinySkiaModule() override;
@@ -33,6 +34,7 @@ namespace blbench {
         ts_point convert_point(BLPoint rect);
 
         ts_blend_mode toTinySkiaOperator(uint32_t compOp);
+        void convertBgraToRgba(const uint8_t* bgra_data, uint8_t* rgba_data, uint32_t pixel_count);
     };
 
     TinySkiaModule::TinySkiaModule() {
@@ -56,7 +58,7 @@ namespace blbench {
     }
 
     bool TinySkiaModule::supportsStyle(StyleKind style) const {
-        return style <= StyleKind::kRadialReflect;
+        return style != StyleKind::kConic;
     }
 
     void TinySkiaModule::beforeRun() {
@@ -65,6 +67,24 @@ namespace blbench {
 
         pixmap = ts_pixmap_create(w, h);
         stroke = ts_stroke {(float) _params.strokeWidth };
+        
+        for (uint32_t i = 0; i < kBenchNumSprites; i++) {
+            const BLImage& sprite = _sprites[i];
+            BLImageData spriteData;
+            sprite.getData(&spriteData);
+            
+            uint32_t pixel_count = spriteData.size.w * spriteData.size.h;
+            uint8_t* rgba_data = new uint8_t[pixel_count * 4];
+            convertBgraToRgba(static_cast<const uint8_t*>(spriteData.pixelData), rgba_data, pixel_count);
+            
+            sprite_pixmaps[i] = ts_pixmap_from_data(
+                rgba_data,
+                spriteData.size.w,
+                spriteData.size.h
+            );
+            
+            delete[] rgba_data;
+        }
     }
 
     void TinySkiaModule::afterRun() {
@@ -84,6 +104,13 @@ namespace blbench {
                 w * h * 4);
         ts_argb_destroy(data);
         ts_pixmap_destroy(pixmap);
+        
+        for (uint32_t i = 0; i < kBenchNumSprites; i++) {
+            if (sprite_pixmaps[i]) {
+                ts_pixmap_destroy(sprite_pixmaps[i]);
+                sprite_pixmaps[i] = nullptr;
+            }
+        }
     }
 
     void TinySkiaModule::flush() {
@@ -322,6 +349,10 @@ namespace blbench {
             case StyleKind::kRadialRepeat:
                 mode = ts_spread_mode::Repeat;
                 break;
+            case StyleKind::kPatternNN:
+            case StyleKind::kPatternBI:
+                mode = ts_spread_mode::Repeat;
+                break;
             default:
                 mode = ts_spread_mode::Pad;
         }
@@ -380,6 +411,29 @@ namespace blbench {
                 ts_paint paint;
                 paint.tag = ts_paint::Tag::RadialGradient;
                 paint.radial_gradient = ts_paint::RadialGradient_Body{ grad };
+                return paint;
+            }
+            case StyleKind::kPatternNN:
+            case StyleKind::kPatternBI: {
+                uint32_t spriteId = nextSpriteId();
+                ts_filter_quality quality = (style == StyleKind::kPatternNN) ? 
+                    ts_filter_quality::Nearest : ts_filter_quality::Bilinear;
+                
+                ts_transform pattern_transform = ts_transform_combine(
+                    ts_transform_translate(rect.x0, rect.y0),
+                    t
+                );
+                ts_pattern *pattern = ts_pattern_create(
+                    sprite_pixmaps[spriteId],
+                    mode,
+                    quality,
+                    1.0f,
+                    pattern_transform
+                );
+
+                ts_paint paint;
+                paint.tag = ts_paint::Tag::Pattern;
+                paint.pattern = ts_paint::Pattern_Body{ pattern };
                 return paint;
             }
             default: {
@@ -453,6 +507,17 @@ namespace blbench {
                 return ts_blend_mode::Exclusion;
             default:
                 return ts_blend_mode::SourceOver;
+        }
+    }
+
+    void TinySkiaModule::convertBgraToRgba(const uint8_t* bgra_data, uint8_t* rgba_data, uint32_t pixel_count) {
+        for (uint32_t i = 0; i < pixel_count; i++) {
+            uint32_t offset = i * 4;
+            
+            rgba_data[offset + 0] = bgra_data[offset + 2]; 
+            rgba_data[offset + 1] = bgra_data[offset + 1]; 
+            rgba_data[offset + 2] = bgra_data[offset + 0]; 
+            rgba_data[offset + 3] = bgra_data[offset + 3]; 
         }
     }
 
