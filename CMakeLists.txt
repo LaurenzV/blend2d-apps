@@ -27,7 +27,6 @@ include("${BLEND2D_DIR}/CMakeLists.txt")
 # ====================
 
 pkg_check_modules(CAIRO cairo)
-find_package(unofficial-skia CONFIG)
 find_package(Qt6 COMPONENTS Core Gui Widgets)
 
 # Dependencies - AntiGrain (Optional)
@@ -210,6 +209,15 @@ endif()
 
 # Dependencies - SKIA (Optional)
 # ==============================
+
+if (NOT SKIA_DIR AND DEFINED ENV{SKIA_DIR})
+  set(SKIA_DIR "$ENV{SKIA_DIR}")
+endif()
+
+if (SKIA_DIR)
+  set(CMAKE_PREFIX_PATH "${SKIA_DIR};${CMAKE_PREFIX_PATH}")
+  find_package(unofficial-skia CONFIG)
+endif()
 
 if(TARGET unofficial::skia::skia)
   message("-- [blend2d-apps] adding support for SKIA")
