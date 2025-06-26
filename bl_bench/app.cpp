@@ -738,7 +738,7 @@ int BenchApp::runBackendTests(Backend& backend, BenchParams& params, JSONBuilder
   DurationFormat fmt[kBenchShapeSizeCount] {};
 
   uint32_t compOpFirst = BL_COMP_OP_SRC_OVER;
-  uint32_t compOpLast  = BL_COMP_OP_SRC_COPY;
+  uint32_t compOpLast  = BL_COMP_OP_SRC_OVER;
 
   if (_compOp != 0xFFFFFFFFu) {
     compOpFirst = compOpLast = _compOp;
