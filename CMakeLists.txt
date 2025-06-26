@@ -236,6 +236,10 @@ endif()
 # Dependencies - JUCE (Explicitly Enabled)
 # ========================================
 
+if (NOT JUCE_DIR AND DEFINED ENV{JUCE_DIR})
+  set(JUCE_DIR "$ENV{JUCE_DIR}")
+endif()
+
 if (JUCE_DIR)
   message("-- [blend2d-apps] adding support for JUCE")
   add_definitions(-DJUCE_USE_CURL=0 -DUSE_COREGRAPHICS_RENDERING=0)
