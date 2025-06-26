@@ -210,11 +210,16 @@ endif()
 # Dependencies - SKIA (Optional)
 # ==============================
 
-if (NOT SKIA_DIR AND DEFINED ENV{SKIA_DIR})
-  set(SKIA_DIR "$ENV{SKIA_DIR}")
+# Check for SKIA_DIR environment variable
+if (DEFINED ENV{SKIA_DIR})
+  if (NOT SKIA_DIR)
+    set(SKIA_DIR "$ENV{SKIA_DIR}" CACHE PATH "Path to Skia directory" FORCE)
+    message("-- [blend2d-apps] Using SKIA_DIR from environment: ${SKIA_DIR}")
+  endif()
 endif()
 
 if (SKIA_DIR)
+  message("-- [blend2d-apps] Looking for Skia in: ${SKIA_DIR}")
   set(CMAKE_PREFIX_PATH "${SKIA_DIR};${CMAKE_PREFIX_PATH}")
   find_package(unofficial-skia CONFIG)
 endif()
@@ -223,6 +228,16 @@ if(TARGET unofficial::skia::skia)
   message("-- [blend2d-apps] adding support for SKIA")
   set(DEPENDENCY_SKIA_LIBRARIES unofficial::skia::skia)
   set(DEPENDENCY_SKIA_DEFINITIONS BLEND2D_APPS_ENABLE_SKIA)
+  
+  # Get the include directory from the target and add parent directory for "skia/" prefix
+  get_target_property(SKIA_INCLUDE_DIRS unofficial::skia::skia INTERFACE_INCLUDE_DIRECTORIES)
+  if(SKIA_INCLUDE_DIRS)
+    foreach(SKIA_INCLUDE_DIR ${SKIA_INCLUDE_DIRS})
+      get_filename_component(SKIA_PARENT_DIR "${SKIA_INCLUDE_DIR}" DIRECTORY)
+      set(DEPENDENCY_SKIA_INCLUDE_DIRS ${DEPENDENCY_SKIA_INCLUDE_DIRS} ${SKIA_PARENT_DIR})
+    endforeach()
+    list(REMOVE_DUPLICATES DEPENDENCY_SKIA_INCLUDE_DIRS)
+  endif()
 endif()
 
 # Dependencies - Qt (Optional)
@@ -244,8 +259,12 @@ endif()
 # Dependencies - JUCE (Explicitly Enabled)
 # ========================================
 
-if (NOT JUCE_DIR AND DEFINED ENV{JUCE_DIR})
-  set(JUCE_DIR "$ENV{JUCE_DIR}")
+# Check for JUCE_DIR environment variable
+if (DEFINED ENV{JUCE_DIR})
+  if (NOT JUCE_DIR)
+    set(JUCE_DIR "$ENV{JUCE_DIR}" CACHE PATH "Path to JUCE directory" FORCE)
+    message("-- [blend2d-apps] Using JUCE_DIR from environment: ${JUCE_DIR}")
+  endif()
 endif()
 
 if (JUCE_DIR)
@@ -291,7 +310,8 @@ target_compile_features(bl_bench PUBLIC cxx_std_17)
 set_property(TARGET bl_bench PROPERTY CXX_VISIBILITY_PRESET hidden)
 target_include_directories(bl_bench PRIVATE
   ${DEPENDENCY_AGG_INCLUDE_DIRS}
-  ${DEPENDENCY_CAIRO_INCLUDE_DIRS})
+  ${DEPENDENCY_CAIRO_INCLUDE_DIRS}
+  ${DEPENDENCY_SKIA_INCLUDE_DIRS})
 target_compile_definitions(bl_bench PRIVATE
   ${DEPENDENCY_AGG_DEFINITIONS}
   ${DEPENDENCY_CAIRO_DEFINITIONS}
