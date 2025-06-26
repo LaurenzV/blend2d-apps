@@ -212,16 +212,25 @@ endif()
 
 # Check for SKIA_DIR environment variable
 if (DEFINED ENV{SKIA_DIR})
-  if (NOT SKIA_DIR)
-    set(SKIA_DIR "$ENV{SKIA_DIR}" CACHE PATH "Path to Skia directory" FORCE)
-    message("-- [blend2d-apps] Using SKIA_DIR from environment: ${SKIA_DIR}")
-  endif()
+  set(SKIA_DIR "$ENV{SKIA_DIR}" CACHE PATH "Path to Skia directory" FORCE)
+  message("-- [blend2d-apps] Using SKIA_DIR from environment: ${SKIA_DIR}")
 endif()
 
 if (SKIA_DIR)
   message("-- [blend2d-apps] Looking for Skia in: ${SKIA_DIR}")
   set(CMAKE_PREFIX_PATH "${SKIA_DIR};${CMAKE_PREFIX_PATH}")
+  # Suppress warnings from Skia's CMake files by temporarily overriding message()
+  function(message)
+    list(GET ARGV 0 MessageType)
+    if(MessageType STREQUAL WARNING)
+      # Skip warning messages
+      return()
+    endif()
+    _message(${ARGV})
+  endfunction()
   find_package(unofficial-skia CONFIG)
+  # Restore original message function
+  unset(message)
 endif()
 
 if(TARGET unofficial::skia::skia)
@@ -261,7 +270,7 @@ endif()
 
 # Check for JUCE_DIR environment variable
 if (DEFINED ENV{JUCE_DIR})
-  if (NOT JUCE_DIR)
+  if (NOT DEFINED JUCE_DIR)
     set(JUCE_DIR "$ENV{JUCE_DIR}" CACHE PATH "Path to JUCE directory" FORCE)
     message("-- [blend2d-apps] Using JUCE_DIR from environment: ${JUCE_DIR}")
   endif()
