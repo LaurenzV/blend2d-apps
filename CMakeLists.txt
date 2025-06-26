@@ -230,9 +230,7 @@ endif()
 # ========================================
 
 if (APPLE)
-  message("-- [blend2d-apps] adding support for CoreGraphics")
-  set(DEPENDENCY_CG_LIBRARIES "-framework CoreGraphics")
-  set(DEPENDENCY_CG_DEFINITIONS BLEND2D_APPS_ENABLE_COREGRAPHICS)
+  message("-- [blend2d-apps] support for core graphics has been explicitly disabled")
 endif()
 
 # Dependencies - JUCE (Explicitly Enabled)
