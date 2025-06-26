@@ -10,6 +10,7 @@
 #include <limits>
 #include <type_traits>
 #include <tuple>
+#include <sys/stat.h>
 
 #include "app.h"
 #include "images_data.h"
@@ -507,6 +508,14 @@ bool BenchApp::init() {
     exit(1);
   }
 
+  // Create images directory if saving images
+  if (_saveImages || _saveOverview) {
+    struct stat st = {0};
+    if (stat("images", &st) == -1) {
+      mkdir("images", 0755);
+    }
+  }
+
   return readImage(_spriteData[0], "#0", _resource_babelfish_png, sizeof(_resource_babelfish_png)) &&
          readImage(_spriteData[1], "#1", _resource_ksplash_png  , sizeof(_resource_ksplash_png  )) &&
          readImage(_spriteData[2], "#2", _resource_ktip_png     , sizeof(_resource_ktip_png     )) &&
@@ -804,11 +813,11 @@ int BenchApp::runBackendTests(Backend& backend, BenchParams& params, JSONBuilder
             overviewCtx.blitImage(BLPointI(1 + (sizeId * (_width + 1)), 1), backend._surface);
             overviewCtx.fillRect(BLRectI(1 + (sizeId * (_width + 1)) + _width, 1, 1, _height), BLRgba32(0xFFFFFFFF));
             if (sizeId == _sizeCount - 1) {
-              snprintf(fileName, 256, "%s-%s-%s-%s.png",
-                backend._name,
+              snprintf(fileName, 256, "images/%s-%s-%s-%s.png",
                 testKindNameList[uint32_t(params.testKind)],
                 compOpNameList[uint32_t(params.compOp)],
-                styleString);
+                styleString,
+                backend._name);
               spacesToUnderscores(fileName);
               overviewImage.writeToFile(fileName);
             }
@@ -817,12 +826,12 @@ int BenchApp::runBackendTests(Backend& backend, BenchParams& params, JSONBuilder
           if (_saveImages) {
             // Save only the last two as these are easier to compare visually.
             if (sizeId >= _sizeCount - 2) {
-              snprintf(fileName, 256, "%s-%s-%s-%s-%c.png",
-                backend._name,
+              snprintf(fileName, 256, "images/%s-%s-%s-%c-%s.png",
                 testKindNameList[uint32_t(params.testKind)],
                 compOpNameList[uint32_t(params.compOp)],
                 styleString,
-                'A' + sizeId);
+                'A' + sizeId,
+                backend._name);
               spacesToUnderscores(fileName);
               backend._surface.writeToFile(fileName);
             }
