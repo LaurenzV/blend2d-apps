@@ -1,6 +1,7 @@
 #ifdef BLEND2D_APPS_ENABLE_VELLO_CPU
 
 #include "backend_vello_cpu.h"
+#include <algorithm>
 
 namespace blbench {
     struct VelloCpuModule : public Backend {
@@ -27,6 +28,7 @@ namespace blbench {
         void renderShape(RenderOp op, ShapeData shape) override;
 
         inline vc_paint convert_style(const vc_rect& rect, StyleKind style, vc_transform t);
+        void set_paint_transform(vc_transform t);
         vc_color gen_color();
         vc_rect convert_rect(BLRect rect);
         vc_rect convert_rect_i(BLRectI rect);
@@ -44,7 +46,7 @@ namespace blbench {
     }
 
     bool VelloCpuModule::supportsStyle(StyleKind style) const {
-        return style <= StyleKind::kSolid;
+        return style <= StyleKind::kConic;
     }
 
     void VelloCpuModule::beforeRun() {
@@ -88,6 +90,7 @@ namespace blbench {
 
         for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
             vc_rect rect = convert_rect_i(_rndCoord.nextRectI(bounds, wh, wh));
+            set_paint_transform(t);
             vc_paint paint = convert_style(rect, style, t);
             vc_set_paint(context, paint);
 
@@ -110,6 +113,7 @@ namespace blbench {
 
         for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
             vc_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
+            set_paint_transform(t);
             vc_paint paint = convert_style(rect, style, t);
             vc_set_paint(context, paint);
 
@@ -137,6 +141,7 @@ namespace blbench {
         for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++, angle += 0.01) {
             vc_transform t = vc_transform_rotate_at(angle, cx, cy);
             vc_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
+            set_paint_transform(id);
             vc_paint paint = convert_style(rect, style, id);
 
             vc_set_paint(context, paint);
@@ -163,6 +168,7 @@ namespace blbench {
         for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
             double radius = _rndExtra.nextDouble(4.0, 40.0);
             vc_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
+            set_paint_transform(t);
             vc_paint paint = convert_style(rect, style, t);
 
             vc_path *p = vc_rounded_rect(rect, radius);
@@ -194,6 +200,7 @@ namespace blbench {
             vc_transform t = vc_transform_rotate_at(angle, cx, cy);
             double radius = _rndExtra.nextDouble(4.0, 40.0);
             vc_rect rect = convert_rect(_rndCoord.nextRect(bounds, wh, wh));
+            set_paint_transform(vc_transform_identity());
             vc_paint paint = convert_style(rect, style, t);
 
             vc_path *p = vc_rounded_rect(rect, radius);
@@ -224,6 +231,7 @@ namespace blbench {
         for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
             vc_point base = convert_point(_rndCoord.nextPoint(bounds));
             vc_rect base_rect = {base.x, base.y, base.x + wh, base.y + wh};
+            set_paint_transform(t);
             vc_paint paint = convert_style(base_rect, style, t);
 
             double x = _rndCoord.nextDouble(base.x, base.x + wh);
@@ -295,6 +303,7 @@ namespace blbench {
             vc_rect base_rect = { (float) base.x, (float) base.y, (float) (base.x + wh), (float) (base.y + wh)};
             vc_transform t = vc_transform_translate(base.x, base.y);
             vc_transform inv_t = vc_transform_translate(-base.x, -base.y);
+            set_paint_transform(inv_t);
             vc_paint paint = convert_style(base_rect, style, inv_t);
 
             vc_set_transform(context, t);
@@ -322,15 +331,111 @@ namespace blbench {
     }
 
     inline vc_paint VelloCpuModule::convert_style(const vc_rect& rect, StyleKind style, vc_transform t) {
-//        double w = rect.x1 - rect.x0;
-//        double h = rect.y1 - rect.y0;
-
-        vc_color color = gen_color();
+        double w = rect.x1 - rect.x0;
+        double h = rect.y1 - rect.y0;
+        double cx = rect.x0 + w * 0.5;
+        double cy = rect.y0 + h * 0.5;
 
         vc_paint paint;
-        paint.tag = vc_paint::Tag::Color;
-        paint.color = vc_paint::Color_Body{ color };
+
+        switch (style) {
+            case StyleKind::kSolid: {
+                vc_color color = gen_color();
+                paint.tag = vc_paint_tag::Color;
+                paint.color = color;
+                break;
+            }
+            case StyleKind::kLinearPad:
+            case StyleKind::kLinearRepeat:
+            case StyleKind::kLinearReflect: {
+                vc_extend extend = (style == StyleKind::kLinearPad) ? vc_extend::Pad :
+                                 (style == StyleKind::kLinearRepeat) ? vc_extend::Repeat : vc_extend::Reflect;
+                
+                vc_point start = {rect.x0 + w * 0.2, rect.y0 + h * 0.2};
+                vc_point end = {rect.x0 + w * 0.8, rect.y0 + h * 0.8};
+                
+                vc_linear_gradient* gradient = vc_linear_gradient_create(start, end, extend);
+                
+                vc_color color0 = gen_color();
+                vc_color color1 = gen_color();
+                vc_color color2 = gen_color();
+                vc_gradient_stop stop0 = {0.0, color0};
+                vc_gradient_stop stop1 = {0.5, color1};
+                vc_gradient_stop stop2 = {1.0, color2};
+                
+                vc_linear_gradient_push_stop(gradient, stop0);
+                vc_linear_gradient_push_stop(gradient, stop1);
+                vc_linear_gradient_push_stop(gradient, stop2);
+                
+                paint.tag = vc_paint_tag::LinearGradient;
+                paint.linear_gradient = gradient;
+                break;
+            }
+            case StyleKind::kRadialPad:
+            case StyleKind::kRadialRepeat:
+            case StyleKind::kRadialReflect: {
+                vc_extend extend = (style == StyleKind::kRadialPad) ? vc_extend::Pad :
+                                 (style == StyleKind::kRadialRepeat) ? vc_extend::Repeat : vc_extend::Reflect;
+                
+                double radius = (w + h) / 4.0;
+                vc_point center1 = {rect.x0 + w / 2.0, rect.y0 + h / 2.0};
+                vc_point center0 = {center1.x - radius / 2.0, center1.y - radius / 2.0};
+                double radius0 = 0.0;
+                double radius1 = radius;
+                
+                vc_radial_gradient* gradient = vc_radial_gradient_create(center0, radius0, center1, radius1, extend);
+
+                vc_color color0 = gen_color();
+                vc_color color1 = gen_color();
+                vc_color color2 = gen_color();
+                vc_gradient_stop stop0 = {0.0, color0};
+                vc_gradient_stop stop1 = {0.5, color1};
+                vc_gradient_stop stop2 = {1.0, color2};
+                
+                vc_radial_gradient_push_stop(gradient, stop0);
+                vc_radial_gradient_push_stop(gradient, stop1);
+                vc_radial_gradient_push_stop(gradient, stop2);
+                
+                paint.tag = vc_paint_tag::RadialGradient;
+                paint.radial_gradient = gradient;
+                break;
+            }
+            case StyleKind::kConic: {
+                vc_point center = {cx, cy};
+                double start_angle = 0.0;
+                double end_angle = 360.0;
+                
+                vc_sweep_gradient* gradient = vc_sweep_gradient_create(center, start_angle, end_angle, vc_extend::Pad);
+
+                vc_color color0 = gen_color();
+                vc_color color1 = gen_color();
+                vc_color color2 = gen_color();
+                vc_gradient_stop stop0 = {0.0, color0};
+                vc_gradient_stop stop1 = {0.33, color1};
+                vc_gradient_stop stop2 = {0.66, color2};
+                vc_gradient_stop stop3 = {1.0, color0}; 
+                
+                vc_sweep_gradient_push_stop(gradient, stop0);
+                vc_sweep_gradient_push_stop(gradient, stop1);
+                vc_sweep_gradient_push_stop(gradient, stop2);
+                vc_sweep_gradient_push_stop(gradient, stop3);
+                
+                paint.tag = vc_paint_tag::SweepGradient;
+                paint.sweep_gradient = gradient;
+                break;
+            }
+            default:
+                vc_color color = gen_color();
+                paint.tag = vc_paint_tag::Color;
+                paint.color = color;
+                break;
+        }
+
         return paint;
+    }
+
+    void VelloCpuModule::set_paint_transform(vc_transform t) {
+        vc_set_paint_transform(context, t);
     }
 
     vc_rect VelloCpuModule::convert_rect(BLRect bl_rect) {
