@@ -34,7 +34,11 @@
 
 #if defined(BLEND2D_APPS_ENABLE_TINY_SKIA)
   #include "backend_tiny_skia.h"
-#endif // BLEND2D_APPS_ENABLE_SKIA
+#endif // BLEND2D_APPS_ENABLE_TINY_SKIA
+
+#if defined(BLEND2D_APPS_ENABLE_VELLO_CPU)
+  #include "backend_vello_cpu.h"
+#endif // BLEND2D_APPS_ENABLE_VELLO_CPU
 
 #if defined(BLEND2D_APPS_ENABLE_COREGRAPHICS)
   #include "backend_coregraphics.h"
@@ -70,6 +74,9 @@ static constexpr uint32_t kSupportedBackends =
 #if defined(BLEND2D_APPS_ENABLE_TINY_SKIA)
 (1u << uint32_t(BackendKind::kTinySkia)) |
 #endif
+#if defined(BLEND2D_APPS_ENABLE_VELLO_CPU)
+(1u << uint32_t(BackendKind::kVelloCpu)) |
+#endif
   (1u << uint32_t(BackendKind::kBlend2D));
 
 static const char* backendKindNameList[] = {
@@ -80,7 +87,8 @@ static const char* backendKindNameList[] = {
   "Skia",
   "JUCE",
   "CoreGraphics",
-  "TinySkia"
+  "TinySkia",
+  "VelloCpu"
 };
 
 static const char* testKindNameList[] = {
@@ -691,6 +699,14 @@ int BenchApp::run() {
 #if defined(BLEND2D_APPS_ENABLE_TINY_SKIA)
     if (isBackendEnabled(BackendKind::kTinySkia)) {
       Backend* backend = createTinySkiaBackend();
+      runBackendTests(*backend, params, json);
+      delete backend;
+    }
+#endif
+
+#if defined(BLEND2D_APPS_ENABLE_VELLO_CPU)
+    if (isBackendEnabled(BackendKind::kVelloCpu)) {
+      Backend* backend = createVelloCpuBackend();
       runBackendTests(*backend, params, json);
       delete backend;
     }
