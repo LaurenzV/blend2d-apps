@@ -1,6 +1,7 @@
 #ifdef BLEND2D_APPS_ENABLE_VELLO_CPU
 
 #include "backend_vello_cpu.h"
+#include "app.h"
 #include <algorithm>
 
 namespace blbench {
@@ -8,6 +9,7 @@ namespace blbench {
         vc_context* context {};
         vc_pixmap* pixmap {};
         vc_stroke stroke;
+        vc_arc_pixmap* sprite_pixmaps[kBenchNumSprites] {};
 
         VelloCpuModule();
         ~VelloCpuModule() override;
@@ -32,6 +34,9 @@ namespace blbench {
         vc_color gen_color();
         vc_rect convert_rect(BLRect rect);
         vc_rect convert_rect_i(BLRectI rect);
+
+        void convertBgraToRgba(const uint8_t* bgra_data, uint8_t* rgba_data, uint32_t pixel_count);
+
         vc_point convert_point(BLPoint rect);
     };
 
@@ -46,7 +51,7 @@ namespace blbench {
     }
 
     bool VelloCpuModule::supportsStyle(StyleKind style) const {
-        return style <= StyleKind::kConic;
+        return style <= StyleKind::kPatternBI;
     }
 
     void VelloCpuModule::beforeRun() {
@@ -56,6 +61,24 @@ namespace blbench {
         pixmap = vc_pixmap_create(w, h);
         context = vc_context_create(w, h);
         stroke = vc_stroke { _params.strokeWidth };
+        
+        for (uint32_t i = 0; i < kBenchNumSprites; i++) {
+            const BLImage& sprite = _sprites[i];
+            BLImageData spriteData;
+            sprite.getData(&spriteData);
+            
+            uint32_t pixel_count = spriteData.size.w * spriteData.size.h;
+            uint8_t* rgba_data = new uint8_t[pixel_count * 4];
+            convertBgraToRgba(static_cast<const uint8_t*>(spriteData.pixelData), rgba_data, pixel_count);
+            
+            sprite_pixmaps[i] = vc_pixmap_from_data(
+                rgba_data,
+                spriteData.size.w,
+                spriteData.size.h
+            );
+            
+            delete[] rgba_data;
+        }
     }
 
     void VelloCpuModule::afterRun() {
@@ -76,6 +99,13 @@ namespace blbench {
         vc_argb_destroy(data);
         vc_pixmap_destroy(pixmap);
         vc_context_destroy(context);
+        
+        for (uint32_t i = 0; i < kBenchNumSprites; i++) {
+            if (sprite_pixmaps[i]) {
+                vc_arc_pixmap_destroy(sprite_pixmaps[i]);
+                sprite_pixmaps[i] = nullptr;
+            }
+        }
     }
 
     void VelloCpuModule::flush() {
@@ -331,6 +361,11 @@ namespace blbench {
     }
 
     inline vc_paint VelloCpuModule::convert_style(const vc_rect& rect, StyleKind style, vc_transform t) {
+        if (style == StyleKind::kPatternNN || style == StyleKind::kPatternBI) {
+            vc_transform rect_transform = vc_transform_translate(rect.x0, rect.y0);
+            vc_transform pattern_transform = vc_transform_combine(rect_transform, t);
+            set_paint_transform(pattern_transform);
+        }
         double w = rect.x1 - rect.x0;
         double h = rect.y1 - rect.y0;
         double cx = rect.x0 + w * 0.5;
@@ -341,8 +376,8 @@ namespace blbench {
         switch (style) {
             case StyleKind::kSolid: {
                 vc_color color = gen_color();
-                paint.tag = vc_paint_tag::Color;
-                paint.color = color;
+                paint.tag = vc_paint::Tag::Color;
+                paint.color = vc_paint::Color_Body{color};
                 break;
             }
             case StyleKind::kLinearPad:
@@ -367,8 +402,8 @@ namespace blbench {
                 vc_linear_gradient_push_stop(gradient, stop1);
                 vc_linear_gradient_push_stop(gradient, stop2);
                 
-                paint.tag = vc_paint_tag::LinearGradient;
-                paint.linear_gradient = gradient;
+                paint.tag = vc_paint::Tag::LinearGradient;
+                paint.linear_gradient = vc_paint::LinearGradient_Body{gradient};
                 break;
             }
             case StyleKind::kRadialPad:
@@ -396,8 +431,8 @@ namespace blbench {
                 vc_radial_gradient_push_stop(gradient, stop1);
                 vc_radial_gradient_push_stop(gradient, stop2);
                 
-                paint.tag = vc_paint_tag::RadialGradient;
-                paint.radial_gradient = gradient;
+                paint.tag = vc_paint::Tag::RadialGradient;
+                paint.radial_gradient = vc_paint::RadialGradient_Body{gradient};
                 break;
             }
             case StyleKind::kConic: {
@@ -420,14 +455,27 @@ namespace blbench {
                 vc_sweep_gradient_push_stop(gradient, stop2);
                 vc_sweep_gradient_push_stop(gradient, stop3);
                 
-                paint.tag = vc_paint_tag::SweepGradient;
-                paint.sweep_gradient = gradient;
+                paint.tag = vc_paint::Tag::SweepGradient;
+                paint.sweep_gradient = vc_paint::SweepGradient_Body{gradient};
+                break;
+            }
+            case StyleKind::kPatternNN:
+            case StyleKind::kPatternBI: {
+                uint32_t spriteId = nextSpriteId();
+                
+                vc_image_quality quality = (style == StyleKind::kPatternNN) ? 
+                    vc_image_quality::Low : vc_image_quality::Medium;
+                vc_image* image = vc_image_create(sprite_pixmaps[spriteId], vc_extend::Repeat, vc_extend::Repeat, quality);
+                
+                paint.tag = vc_paint::Tag::Image;
+                paint.image = vc_paint::Image_Body{image};
+                
                 break;
             }
             default:
                 vc_color color = gen_color();
-                paint.tag = vc_paint_tag::Color;
-                paint.color = color;
+                paint.tag = vc_paint::Tag::Color;
+                paint.color = vc_paint::Color_Body{color};
                 break;
         }
 
@@ -450,6 +498,17 @@ namespace blbench {
         return {(float) bl_rect.x, (float) bl_rect.y, (float) (bl_rect.x + bl_rect.w), (float) (bl_rect.y + bl_rect.h)};
     }
 
+    void VelloCpuModule::convertBgraToRgba(const uint8_t* bgra_data, uint8_t* rgba_data, uint32_t pixel_count) {
+        for (uint32_t i = 0; i < pixel_count; i++) {
+            uint32_t offset = i * 4;
+            
+            rgba_data[offset + 0] = bgra_data[offset + 2]; 
+            rgba_data[offset + 1] = bgra_data[offset + 1]; 
+            rgba_data[offset + 2] = bgra_data[offset + 0]; 
+            rgba_data[offset + 3] = bgra_data[offset + 3]; 
+        }
+    }
+    
     Backend* createVelloCpuBackend() {
         return new VelloCpuModule();
     }
