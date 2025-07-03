@@ -478,7 +478,7 @@ namespace blbench {
                 vc_image_quality quality = (style == StyleKind::kPatternNN) ? 
                     vc_image_quality::Low : vc_image_quality::Medium;
                 // TODO: DOn't leak!
-                vc_image* image = vc_image_create(sprite_pixmaps[spriteId], vc_extend::Repeat, vc_extend::Repeat, quality);
+                vc_image* image = vc_image_create(sprite_pixmaps[spriteId], vc_extend::Pad, vc_extend::Pad, quality);
                 
                 paint.tag = vc_paint::Tag::Image;
                 paint.image = vc_paint::Image_Body{image};
