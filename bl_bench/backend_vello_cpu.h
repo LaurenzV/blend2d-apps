@@ -6,7 +6,7 @@
 
 namespace blbench {
 
-    Backend* createVelloCpuBackend();
+    Backend* createVelloCpuBackend(uint32_t threadCount);
 
 } // {blbench}
 

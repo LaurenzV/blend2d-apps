@@ -9,9 +9,10 @@ namespace blbench {
         vc_context* context {};
         vc_pixmap* pixmap {};
         vc_stroke stroke;
+        uint32_t _threadCount;
         vc_arc_pixmap* sprite_pixmaps[kBenchNumSprites] {};
 
-        VelloCpuModule();
+        explicit VelloCpuModule(uint32_t threadCount = 0);
         ~VelloCpuModule() override;
 
         bool supportsCompOp(BLCompOp compOp) const override;
@@ -40,8 +41,13 @@ namespace blbench {
         vc_point convert_point(BLPoint rect);
     };
 
-    VelloCpuModule::VelloCpuModule() {
-        strcpy(_name, "vello-cpu");
+    VelloCpuModule::VelloCpuModule(uint32_t threadCount) {
+        _threadCount = threadCount;
+
+        if (!_threadCount)
+            snprintf(_name, sizeof(_name), "vello-cpu ST");
+        else
+            snprintf(_name, sizeof(_name), "vello-cpu %uT", _threadCount);
     }
 
     VelloCpuModule::~VelloCpuModule() {}
@@ -59,7 +65,7 @@ namespace blbench {
         int h = int(_params.screenH);
 
         pixmap = vc_pixmap_create(w, h);
-        context = vc_context_create(w, h);
+        context = vc_context_create(w, h, _threadCount);
         stroke = vc_stroke { _params.strokeWidth };
         
         for (uint32_t i = 0; i < kBenchNumSprites; i++) {
@@ -109,7 +115,6 @@ namespace blbench {
     }
 
     void VelloCpuModule::flush() {
-
     }
 
     void VelloCpuModule::renderRectA(RenderOp op) {
@@ -132,6 +137,7 @@ namespace blbench {
             }
         }
 
+        vc_flush(context);
         vc_render_to_pixmap(pixmap, context);
     }
 
@@ -155,6 +161,7 @@ namespace blbench {
             }
         }
 
+        vc_flush(context);
         vc_render_to_pixmap(pixmap, context);
     }
 
@@ -186,6 +193,7 @@ namespace blbench {
 
         }
 
+        vc_flush(context);
         vc_render_to_pixmap(pixmap, context);
     }
 
@@ -214,6 +222,7 @@ namespace blbench {
             vc_path_destroy(p);
         }
 
+        vc_flush(context);
         vc_render_to_pixmap(pixmap, context);
     }
 
@@ -248,6 +257,7 @@ namespace blbench {
             vc_path_destroy(p);
         }
 
+        vc_flush(context);
         vc_render_to_pixmap(pixmap, context);
     }
 
@@ -292,6 +302,7 @@ namespace blbench {
             vc_path_destroy(path);
         }
 
+        vc_flush(context);
         vc_render_to_pixmap(pixmap, context);
     }
 
@@ -350,6 +361,7 @@ namespace blbench {
 
         vc_path_destroy(path);
 
+        vc_flush(context);
         vc_render_to_pixmap(pixmap, context);
     }
 
@@ -510,8 +522,8 @@ namespace blbench {
         }
     }
     
-    Backend* createVelloCpuBackend() {
-        return new VelloCpuModule();
+    Backend* createVelloCpuBackend(uint32_t threadCount) {
+        return new VelloCpuModule(threadCount);
     }
 }
 
