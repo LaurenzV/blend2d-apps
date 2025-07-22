@@ -44,13 +44,17 @@ namespace blbench {
     VelloCpuModule::VelloCpuModule(uint32_t threadCount) {
         _threadCount = threadCount;
 
+        context = vc_context_create(1, 1, _threadCount);
+
         if (!_threadCount)
             snprintf(_name, sizeof(_name), "vello-cpu ST");
         else
             snprintf(_name, sizeof(_name), "vello-cpu %uT", _threadCount);
     }
 
-    VelloCpuModule::~VelloCpuModule() {}
+    VelloCpuModule::~VelloCpuModule() {
+        vc_context_destroy(context);
+    }
 
     bool VelloCpuModule::supportsCompOp(BLCompOp compOp) const {
         return compOp == BL_COMP_OP_SRC_OVER;
@@ -65,7 +69,7 @@ namespace blbench {
         int h = int(_params.screenH);
 
         pixmap = vc_pixmap_create(w, h);
-        context = vc_context_create(w, h, _threadCount);
+        vc_context_resize(context, w, h, _threadCount);
         stroke = vc_stroke { _params.strokeWidth };
         
         for (uint32_t i = 0; i < kBenchNumSprites; i++) {
@@ -104,7 +108,7 @@ namespace blbench {
                 w * h * 4);
         vc_argb_destroy(data);
         vc_pixmap_destroy(pixmap);
-        vc_context_destroy(context);
+        vc_context_reset(context);
         
         for (uint32_t i = 0; i < kBenchNumSprites; i++) {
             if (sprite_pixmaps[i]) {

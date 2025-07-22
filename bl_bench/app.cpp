@@ -679,13 +679,13 @@ int BenchApp::run() {
       delete backend;
 
       // TODO: Re-enable
-      // backend = createBlend2DBackend(2);
-      // runBackendTests(*backend, params, json);
-      // delete backend;
-      //
-      // backend = createBlend2DBackend(4);
-      // runBackendTests(*backend, params, json);
-      // delete backend;
+      backend = createBlend2DBackend(2);
+      runBackendTests(*backend, params, json);
+      delete backend;
+      
+      backend = createBlend2DBackend(4);
+      runBackendTests(*backend, params, json);
+      delete backend;
 
       backend = createBlend2DBackend(8);
       runBackendTests(*backend, params, json);
@@ -711,20 +711,20 @@ int BenchApp::run() {
 #if defined(BLEND2D_APPS_ENABLE_VELLO_CPU)
     if (isBackendEnabled(BackendKind::kVelloCpu)) {
       Backend* backend = createVelloCpuBackend(0);
-      // runBackendTests(*backend, params, json);
-      // delete backend;
+      runBackendTests(*backend, params, json);
+      delete backend;
 
-      // backend = createVelloCpuBackend(2);
-      // runBackendTests(*backend, params, json);
-      // delete backend;
+      backend = createVelloCpuBackend(2);
+      runBackendTests(*backend, params, json);
+      delete backend;
       
       backend = createVelloCpuBackend(4);
       runBackendTests(*backend, params, json);
       delete backend;
 
-      // backend = createVelloCpuBackend(8);
-      // runBackendTests(*backend, params, json);
-      // delete backend;
+      backend = createVelloCpuBackend(8);
+      runBackendTests(*backend, params, json);
+      delete backend;
     }
 #endif
     
