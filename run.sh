@@ -1,2 +1,2 @@
 cd build 
-./bl_bench --repeat=5 --backend=Blend2D,VelloCpu
+./bl_bench --repeat=15

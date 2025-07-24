@@ -677,7 +677,7 @@ int BenchApp::run() {
       Backend* backend = backend = createBlend2DBackend(0);
       runBackendTests(*backend, params, json);
       delete backend;
-
+      
       // TODO: Re-enable
       backend = createBlend2DBackend(2);
       runBackendTests(*backend, params, json);
@@ -686,7 +686,7 @@ int BenchApp::run() {
       backend = createBlend2DBackend(4);
       runBackendTests(*backend, params, json);
       delete backend;
-
+      
       backend = createBlend2DBackend(8);
       runBackendTests(*backend, params, json);
       delete backend;
