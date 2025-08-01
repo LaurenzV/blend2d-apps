@@ -1,3 +1,9 @@
+This is a fork of the `Blend2D` benchmark harness. It has been extended so that 
+`tiny-skia` as well as `vello-cpu` are also included as part of the benchmarks.
+In order to run it yourself, you will need to clone a copy of [tiny_skia_c](https://github.com/LaurenzV/tiny_skia_c) as well as [vello_cpu_c](https://github.com/LaurenzV/vello_cpu_c), 
+build the libraries and then point the `TINY_SKIA_DIR` and `VELLO_CPU_DIR` to those directories.
+Then you can just build it according to the normal build instructions.
+
 Blend2D Apps
 ============
 
