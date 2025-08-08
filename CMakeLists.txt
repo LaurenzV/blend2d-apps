@@ -230,6 +230,23 @@ if (VELLO_CPU_DIR)
   set(DEPENDENCY_VELLO_CPU_DIR "${VELLO_CPU_DIR}/target/release")
 endif()
 
+# Dependencies - raqote (Optional)
+# ================================
+
+if (DEFINED ENV{RAQOTE_DIR})
+  if (NOT DEFINED RAQOTE_DIR)
+    set(RAQOTE_DIR "$ENV{RAQOTE_DIR}" CACHE PATH "Path to raqote directory" FORCE)
+  endif()
+endif()
+
+if (RAQOTE_DIR)
+  message("-- [blend2d-apps] adding support for raqote")
+  set(DEPENDENCY_RAQOTE_LIBRARIES raqote_c)
+  set(DEPENDENCY_RAQOTE_DEFINITIONS BLEND2D_APPS_ENABLE_RAQOTE)
+  set(DEPENDENCY_RAQOTE_INCLUDE_DIRS "${RAQOTE_DIR}")
+  set(DEPENDENCY_RAQOTE_DIR "${RAQOTE_DIR}/target/release")
+endif()
+
 # Dependencies - Cairo (Optional)
 # ===============================
 
@@ -346,6 +363,8 @@ set(BLEND2D_BENCH_SRC
   bl_bench/backend_tiny_skia.h
   bl_bench/backend_vello_cpu.cpp
   bl_bench/backend_vello_cpu.h
+  bl_bench/backend_raqote.cpp
+  bl_bench/backend_raqote.h
   bl_bench/shape_data.cpp
   bl_bench/shape_data.h
 )
@@ -358,6 +377,7 @@ target_include_directories(bl_bench PRIVATE
   ${DEPENDENCY_CAIRO_INCLUDE_DIRS}
   ${DEPENDENCY_TINY_SKIA_INCLUDE_DIRS}
   ${DEPENDENCY_VELLO_CPU_INCLUDE_DIRS}
+  ${DEPENDENCY_RAQOTE_INCLUDE_DIRS}
   ${DEPENDENCY_SKIA_INCLUDE_DIRS})
 
 target_compile_definitions(bl_bench PRIVATE
@@ -367,6 +387,7 @@ target_compile_definitions(bl_bench PRIVATE
   ${DEPENDENCY_SKIA_DEFINITIONS}
   ${DEPENDENCY_TINY_SKIA_DEFINITIONS}
   ${DEPENDENCY_VELLO_CPU_DEFINITIONS}
+  ${DEPENDENCY_RAQOTE_DEFINITIONS}
   ${DEPENDENCY_CG_DEFINITIONS}
   ${DEPENDENCY_JUCE_DEFINITIONS})
 target_link_libraries(bl_bench blend2d::blend2d
@@ -377,8 +398,9 @@ target_link_libraries(bl_bench blend2d::blend2d
   ${DEPENDENCY_CG_LIBRARIES}
   ${DEPENDENCY_TINY_SKIA_LIBRARIES}
   ${DEPENDENCY_VELLO_CPU_LIBRARIES}
+  ${DEPENDENCY_RAQOTE_LIBRARIES}
   ${DEPENDENCY_JUCE_LIBRARIES})
-target_link_directories(bl_bench PRIVATE ${DEPENDENCY_CAIRO_LIBRARY_DIRS} ${DEPENDENCY_TINY_SKIA_DIR} ${DEPENDENCY_VELLO_CPU_DIR})
+target_link_directories(bl_bench PRIVATE ${DEPENDENCY_CAIRO_LIBRARY_DIRS} ${DEPENDENCY_TINY_SKIA_DIR} ${DEPENDENCY_VELLO_CPU_DIR} ${DEPENDENCY_RAQOTE_DIR})
 
 # Blend2D-Apps - Blend2D Qt Demos
 # ===============================

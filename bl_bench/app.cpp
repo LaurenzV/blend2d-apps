@@ -40,6 +40,10 @@
   #include "backend_vello_cpu.h"
 #endif // BLEND2D_APPS_ENABLE_VELLO_CPU
 
+#if defined(BLEND2D_APPS_ENABLE_RAQOTE)
+  #include "backend_raqote.h"
+#endif // BLEND2D_APPS_ENABLE_RAQOTE
+
 #if defined(BLEND2D_APPS_ENABLE_COREGRAPHICS)
   #include "backend_coregraphics.h"
 #endif // BLEND2D_APPS_ENABLE_COREGRAPHICS
@@ -77,6 +81,9 @@ static constexpr uint32_t kSupportedBackends =
 #if defined(BLEND2D_APPS_ENABLE_VELLO_CPU)
 (1u << uint32_t(BackendKind::kVelloCpu)) |
 #endif
+#if defined(BLEND2D_APPS_ENABLE_RAQOTE)
+(1u << uint32_t(BackendKind::kRaqote)) |
+#endif
   (1u << uint32_t(BackendKind::kBlend2D));
 
 static const char* backendKindNameList[] = {
@@ -88,7 +95,8 @@ static const char* backendKindNameList[] = {
   "JUCE",
   "CoreGraphics",
   "TinySkia",
-  "VelloCpu"
+  "VelloCpu",
+  "Raqote"
 };
 
 static const char* testKindNameList[] = {
@@ -678,17 +686,17 @@ int BenchApp::run() {
       runBackendTests(*backend, params, json);
       delete backend;
       
-      backend = createBlend2DBackend(2);
-      runBackendTests(*backend, params, json);
-      delete backend;
-      
-      backend = createBlend2DBackend(4);
-      runBackendTests(*backend, params, json);
-      delete backend;
-      
-      backend = createBlend2DBackend(8);
-      runBackendTests(*backend, params, json);
-      delete backend;
+      // backend = createBlend2DBackend(2);
+      // runBackendTests(*backend, params, json);
+      // delete backend;
+      //
+      // backend = createBlend2DBackend(4);
+      // runBackendTests(*backend, params, json);
+      // delete backend;
+      //
+      // backend = createBlend2DBackend(8);
+      // runBackendTests(*backend, params, json);
+      // delete backend;
     }
 
 #if defined(BLEND2D_APPS_ENABLE_AGG)
@@ -713,15 +721,23 @@ int BenchApp::run() {
       runBackendTests(*backend, params, json);
       delete backend;
 
-      backend = createVelloCpuBackend(2);
-      runBackendTests(*backend, params, json);
-      delete backend;
-      
-      backend = createVelloCpuBackend(4);
-      runBackendTests(*backend, params, json);
-      delete backend;
+      // backend = createVelloCpuBackend(2);
+      // runBackendTests(*backend, params, json);
+      // delete backend;
+      //
+      // backend = createVelloCpuBackend(4);
+      // runBackendTests(*backend, params, json);
+      // delete backend;
+      //
+      // backend = createVelloCpuBackend(8);
+      // runBackendTests(*backend, params, json);
+      // delete backend;
+    }
+#endif
 
-      backend = createVelloCpuBackend(8);
+#if defined(BLEND2D_APPS_ENABLE_RAQOTE)
+    if (isBackendEnabled(BackendKind::kRaqote)) {
+      Backend* backend = createRaqoteBackend();
       runBackendTests(*backend, params, json);
       delete backend;
     }
