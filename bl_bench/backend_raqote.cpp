@@ -67,6 +67,7 @@ namespace blbench {
                style == StyleKind::kRadialPad || 
                style == StyleKind::kRadialRepeat || 
                style == StyleKind::kRadialReflect ||
+               style == StyleKind::kConic ||
                style == StyleKind::kPatternNN || 
                style == StyleKind::kPatternBI;
     }
@@ -364,7 +365,9 @@ namespace blbench {
             rq_transform t = rq_transform_translate((float)base.x, (float)base.y);
             rq_draw_target_set_transform(draw_target, t);
 
-            rq_paint paint = convertStyle(base_rect, style, t);
+            rq_rect paint_rect = {0.0, 0.0, (float)wh, (float)wh};
+
+            rq_paint paint = convertStyle(paint_rect, style, t);
             if (op == RenderOp::kStroke) {
                 rq_draw_target_stroke_path(draw_target, path, paint, &stroke, &options);
             } else {
