@@ -148,7 +148,6 @@ namespace blbench {
     }
 
     void RaqoteModule::renderRectA(RenderOp op) {
-        rq_transform t = rq_transform_identity();
         BLSizeI bounds(_params.screenW, _params.screenH);
         StyleKind style = _params.style;
         int wh = _params.shapeSize;
@@ -156,9 +155,8 @@ namespace blbench {
         for (uint32_t i = 0, quantity = _params.quantity; i < quantity; i++) {
             rq_rect rect = convert_rect_i(_rndCoord.nextRectI(bounds, wh, wh));
             rq_draw_options options = createDrawOptions(toRaqoteOperator(_params.compOp));
-            rq_draw_target_set_transform(draw_target, t);
 
-            rq_paint paint = convertStyle(rect, style, t);
+            rq_paint paint = convertStyle(rect, style, rq_transform_identity());
             if (op == RenderOp::kStroke) {
                 rq_draw_target_stroke_rect(draw_target, rect, paint, &stroke, &options);
             } else {
@@ -498,7 +496,7 @@ namespace blbench {
                 float x1 = rect.x + w * 0.8f;
                 float y1 = rect.y + h * 0.8f;
 
-                rq_linear_gradient *grad = rq_linear_gradient_create(x0, y0, x1, y1, spread_mode, transform);
+                rq_linear_gradient *grad = rq_linear_gradient_create(x0, y0, x1, y1, spread_mode);
                 
                 rq_gradient_stop stop0 = {0.0f, c0};
                 rq_gradient_stop stop1 = {0.5f, c1};
@@ -519,7 +517,7 @@ namespace blbench {
                 double start_angle = 0.0;
                 double end_angle = 360.0;
                 
-                rq_sweep_gradient* gradient = rq_sweep_gradient_create((float) cx, (float) cy, start_angle, end_angle, rq_spread_mode::Pad, rq_transform_identity());
+                rq_sweep_gradient* gradient = rq_sweep_gradient_create((float) cx, (float) cy, start_angle, end_angle, rq_spread_mode::Pad);
 
                 rq_color c0 = gen_color();
                 rq_color c1 = gen_color();
@@ -557,7 +555,7 @@ namespace blbench {
                 rq_radial_gradient *grad = rq_radial_gradient_create(
                     inner_x, inner_y, 0.0f,  // inner circle (radius 0)
                     center_x, center_y, radius,  // outer circle
-                    spread_mode, transform);
+                    spread_mode);
                 
                 rq_gradient_stop stop0 = {0.0f, c0};
                 rq_gradient_stop stop1 = {0.5f, c1};
@@ -577,8 +575,7 @@ namespace blbench {
                 rq_filter_mode filter = (style == StyleKind::kPatternNN) ? 
                     rq_filter_mode::Nearest : rq_filter_mode::Bilinear;
                 
-                rq_transform pattern_transform = rq_transform_multiply(
-                    rq_transform_translate(rect.x, rect.y), transform);
+                rq_transform pattern_transform = rq_transform_translate(-rect.x, -rect.y);
 
                 // TODO: Don't leak.
                 rq_pattern *pattern = rq_pattern_create(
