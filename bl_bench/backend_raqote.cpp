@@ -1,6 +1,7 @@
 #ifdef BLEND2D_APPS_ENABLE_RAQOTE
 
 #include "backend_raqote.h"
+#include "backend_raqote.h"
 #include "app.h"
 #include <vector>
 
@@ -511,6 +512,33 @@ namespace blbench {
                 paint.linear_gradient = rq_paint::LinearGradient_Body{grad};
                 return paint;
             }
+            case StyleKind::kConic: {
+                double cx = rect.x + rect.width * 0.5;
+                double cy = rect.y + rect.height * 0.5;
+                
+                double start_angle = 0.0;
+                double end_angle = 360.0;
+                
+                rq_sweep_gradient* gradient = rq_sweep_gradient_create((float) cx, (float) cy, start_angle, end_angle, rq_spread_mode::Pad, rq_transform_identity());
+
+                rq_color c0 = gen_color();
+                rq_color c1 = gen_color();
+                rq_color c2 = gen_color();
+                rq_gradient_stop stop0 = {0.0, c0};
+                rq_gradient_stop stop1 = {0.33, c1};
+                rq_gradient_stop stop2 = {0.66, c2};
+                rq_gradient_stop stop3 = {1.0, c0}; 
+                
+                rq_sweep_gradient_add_stop(gradient, stop0);
+                rq_sweep_gradient_add_stop(gradient, stop1);
+                rq_sweep_gradient_add_stop(gradient, stop2);
+                rq_sweep_gradient_add_stop(gradient, stop3);
+
+                rq_paint paint;
+                paint.tag = rq_paint::Tag::SweepGradient;
+                paint.sweep_gradient = rq_paint::SweepGradient_Body{gradient};
+                return paint;
+            }
             case StyleKind::kRadialPad:
             case StyleKind::kRadialRepeat:
             case StyleKind::kRadialReflect: {
@@ -551,7 +579,8 @@ namespace blbench {
                 
                 rq_transform pattern_transform = rq_transform_multiply(
                     rq_transform_translate(rect.x, rect.y), transform);
-                    
+
+                // TODO: Don't leak.
                 rq_pattern *pattern = rq_pattern_create(
                     sprite_images[spriteId],
                     rq_extend_mode::Repeat,
